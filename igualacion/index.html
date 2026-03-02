@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Bono de Igualación — HC Wellness</title>
+  <style>
+    :root{
+      --hc-orange:#de7319;
+      --hc-orange-dark:#a3441f;
+      --ok:#0a7a2f;
+      --bad:#b00020;
+      --ink:#111;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f6f5f2;
+      --line:#e6e6e6;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04);}
+    h1{margin:0 0 6px;font-size:22px;text-align:center;color:var(--hc-orange-dark)}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
+    .rule{margin:0;padding:12px 14px;border-radius:14px;background:#fff3ea;border:1px solid #ffd3b7;font-weight:800;line-height:1.35}
+    code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid #ffd3b7;background:#fff;font-size:12px;color:#222;font-weight:900;margin-top:8px}
+
+    .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
+    .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
+    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
+    .opt input{margin-right:10px;transform:translateY(1px)}
+    .opt.correct{border-color:var(--ok);background:#e9f7ee}
+    .opt.wrong{border-color:var(--bad);background:#fdecee}
+    .fb{margin-top:8px;font-weight:900}
+    .fb.ok{color:var(--ok)}
+    .fb.bad{color:var(--bad)}
+
+    .controls{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      margin:18px 0 26px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
+    .btn-primary{background:var(--hc-orange);color:#fff}
+    .btn-primary:hover{background:var(--hc-orange-dark)}
+    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
+    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Quiz Bono de Igualación</h1>
+      <p class="sub">Ahora te toca a ti. 🔥 Calcula la igualación completa según los niveles que desbloquea tu rango.</p>
+      <p class="rule">
+        Regla: tu igualación se calcula sobre <code>(Binario + Uninivel)</code> de cada nivel que tengas desbloqueado.<br>
+        Porcentajes: <code>N1 25%</code>, <code>N2 20%</code>, <code>N3 10%</code>, <code>N4 5%</code>, <code>N5 5%</code><br>
+        <span class="pill">Ej: Plata cobra N1+N2+N3 (no solo N3).</span>
+      </p>
+    </div>
+
+    <div id="quiz"></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
+      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
+      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz — Bono de Igualación</div>
+  </div>
+
+<script>
+  const fmtUsd = (n) => Number(n).toFixed(2).replace(/\.00$/,'');
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  };
+  const pickN = (arr,n) => shuffle(arr).slice(0,n);
+
+  const LEVEL_RATE = {1:0.25, 2:0.20, 3:0.10, 4:0.05, 5:0.05};
+  const RANK_MAX_LEVEL = {"Ejecutivo":1,"Bronce":2,"Plata":3,"Oro":4,"Platino":5};
+
+  function calcTotal(rank, levels){
+    const maxL = RANK_MAX_LEVEL[rank] || 0;
+    let total = 0;
+    let explainParts = [];
+    for(let l=1;l<=5;l++){
+      const base = (levels[l]?.bin || 0) + (levels[l]?.uni || 0);
+      if(l<=maxL){
+        const pay = base * (LEVEL_RATE[l] || 0);
+        total += pay;
+        explainParts.push(`N${l}: base $${fmtUsd(base)} × ${(LEVEL_RATE[l]*100).toFixed(0)}% = $${fmtUsd(pay)}`);
+      } else {
+        if(base>0) explainParts.push(`N${l}: base $${fmtUsd(base)} (no aplica por rango)`);
+      }
+    }
+    return {total, explain: explainParts.join(" | ")};
+  }
+
+  const optText = (usd) => `Igualación total: $${fmtUsd(usd)} USD`;
+
+  function buildOptions(correct){
+    const w1 = correct * 2;               // error típico (duplicar)
+    const w2 = Math.max(0, correct - 10); // error típico
+    const w3 = correct + 7.5;             // error típico
+    return shuffle([correct, w1, w2, w3]).map(v => optText(v));
+  }
+
+  // 25 escenarios: cada uno trae comisiones (bin+uni) por nivel 1..5
+  // En el quiz se pide el TOTAL de igualación según el rango (sumando niveles desbloqueados).
+  const BANK = [
+    {id:"q1",  rank:"Ejecutivo", levels:{1:{bin:200,uni:50},2:{bin:120,uni:30}}},
+    {id:"q2",  rank:"Bronce",    levels:{1:{bin:200,uni:50},2:{bin:120,uni:30}}},
+    {id:"q3",  rank:"Plata",     levels:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
+    {id:"q4",  rank:"Oro",       levels:{1:{bin:250,uni:0},2:{bin:180,uni:20},3:{bin:300,uni:30},4:{bin:600,uni:75}}},
+    {id:"q5",  rank:"Platino",   levels:{1:{bin:500,uni:0},2:{bin:250,uni:100},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:1000,uni:120}}},
+    {id:"q6",  rank:"Plata",     levels:{1:{bin:90,uni:10},2:{bin:150,uni:75},3:{bin:0,uni:120}}},
+    {id:"q7",  rank:"Bronce",    levels:{1:{bin:100,uni:25},2:{bin:60,uni:56.25},3:{bin:400,uni:40}}},
+    {id:"q8",  rank:"Ejecutivo", levels:{1:{bin:67.5,uni:11.25},3:{bin:225,uni:225}}},
+    {id:"q9",  rank:"Oro",       levels:{1:{bin:300,uni:50},2:{bin:120,uni:30},4:{bin:250,uni:0}}},
+    {id:"q10", rank:"Platino",   levels:{2:{bin:500,uni:0},5:{bin:0,uni:225}}},
+    {id:"q11", rank:"Plata",     levels:{1:{bin:300,uni:0},2:{bin:150,uni:0},3:{bin:225,uni:225},4:{bin:500,uni:50}}},
+    {id:"q12", rank:"Bronce",    levels:{1:{bin:200,uni:0},2:{bin:0,uni:200},4:{bin:600,uni:60}}},
+    {id:"q13", rank:"Ejecutivo", levels:{1:{bin:1000,uni:100},2:{bin:500,uni:0}}},
+    {id:"q14", rank:"Oro",       levels:{1:{bin:120,uni:30},2:{bin:300,uni:40},3:{bin:250,uni:100},4:{bin:700,uni:60},5:{bin:900,uni:100}}},
+    {id:"q15", rank:"Platino",   levels:{1:{bin:0,uni:300},2:{bin:120,uni:30},3:{bin:300,uni:40},4:{bin:250,uni:0},5:{bin:1000,uni:0}}},
+    {id:"q16", rank:"Plata",     levels:{1:{bin:500,uni:50},2:{bin:0,uni:0},3:{bin:340,uni:0}}},
+    {id:"q17", rank:"Bronce",    levels:{1:{bin:250,uni:50},2:{bin:150,uni:30}}},
+    {id:"q18", rank:"Ejecutivo", levels:{1:{bin:0,uni:120}}},
+    {id:"q19", rank:"Oro",       levels:{1:{bin:150,uni:0},2:{bin:120,uni:30},3:{bin:0,uni:120},4:{bin:600,uni:0}}},
+    {id:"q20", rank:"Platino",   levels:{1:{bin:300,uni:30},2:{bin:180,uni:20},3:{bin:300,uni:40},4:{bin:600,uni:75},5:{bin:1000,uni:120}}},
+    {id:"q21", rank:"Plata",     levels:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
+    {id:"q22", rank:"Bronce",    levels:{1:{bin:90,uni:10},2:{bin:300,uni:0}}},
+    {id:"q23", rank:"Ejecutivo", levels:{1:{bin:300,uni:30},5:{bin:1000,uni:120}}},
+    {id:"q24", rank:"Oro",       levels:{1:{bin:67.5,uni:11.25},2:{bin:60,uni:56.25},3:{bin:150,uni:75},4:{bin:250,uni:0}}},
+    {id:"q25", rank:"Platino",   levels:{1:{bin:100,uni:25},2:{bin:150,uni:75},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:0,uni:225}}},
+  ];
+
+  let current = [];
+
+  function render(){
+    const host = document.getElementById("quiz");
+    host.innerHTML = "";
+    document.getElementById("score").textContent = "";
+
+    current = pickN(BANK, 10).map(x => ({...x}));
+
+    current.forEach((q, i) => {
+      const {total, explain} = calcTotal(q.rank, q.levels);
+      q._correctText = optText(total);
+      q._explain = explain;
+
+      const options = buildOptions(total);
+
+      const lines = [1,2,3,4,5].map(l=>{
+        const b = q.levels[l]?.bin ?? 0;
+        const u = q.levels[l]?.uni ?? 0;
+        return `• Nivel ${l}: Binario $${fmtUsd(b)} + Uninivel $${fmtUsd(u)}`;
+      }).join("<br>");
+
+      const card = document.createElement("div");
+      card.className = "q";
+      card.innerHTML = `
+        <div class="q-title">P${i+1}. Cálculo de Igualación (total por niveles desbloqueados)</div>
+        <div class="q-desc">
+          Tu rango: <b>${q.rank}</b> (desbloquea hasta nivel ${RANK_MAX_LEVEL[q.rank]})<br>
+          Comisiones de tu organización por niveles:<br>${lines}<br>
+          Pregunta: ¿Cuál es tu <b>igualación total</b> en USD esta semana?
+        </div>
+        <div class="opts">
+          ${options.map(o=>`
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${o}">
+              ${o}
+            </label>
+          `).join("")}
+        </div>
+        <div class="fb" id="fb-${q.id}"></div>
+      `;
+      host.appendChild(card);
+    });
+  }
+
+  function check(){
+    let ok = 0;
+    let total = 0;
+
+    current.forEach(q=>{
+      total++;
+      const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+      const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+      const fb = document.getElementById(`fb-${q.id}`);
+
+      inputs.forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+
+      if(!picked){
+        fb.className = "fb bad";
+        fb.textContent = "Elige una opción.";
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const lab = inp.closest(".opt");
+        const isCorrect = (inp.value === q._correctText);
+        if(isCorrect) lab.classList.add("correct");
+        if(inp.checked && !isCorrect) lab.classList.add("wrong");
+      });
+
+      const isOk = (picked.value === q._correctText);
+      if(isOk){
+        ok++;
+        fb.className = "fb ok";
+        fb.textContent = "Correcto ✅";
+      } else {
+        fb.className = "fb bad";
+        fb.textContent = `Incorrecto ❌  ${q._explain}`;
+      }
+    });
+
+    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+  }
+
+  function reset(){
+    current.forEach(q=>{
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+      const fb = document.getElementById(`fb-${q.id}`);
+      if(fb){ fb.className="fb"; fb.textContent=""; }
+    });
+    document.getElementById("score").textContent = "";
+  }
+
+  document.getElementById("btnNew").addEventListener("click", render);
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnReset").addEventListener("click", reset);
+
+  render();
+</script>
+</body>
+</html>
