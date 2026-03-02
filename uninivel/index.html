@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Bono Uninivel — HC Wellness</title>
+  <style>
+    :root{
+      --hc-orange:#de7319;
+      --hc-orange-dark:#a3441f;
+      --ok:#0a7a2f;
+      --bad:#b00020;
+      --ink:#111;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f6f5f2;
+      --line:#e6e6e6;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04);}
+    h1{margin:0 0 6px;font-size:22px;text-align:center;color:var(--hc-orange-dark)}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
+    .rule{margin:0;padding:12px 14px;border-radius:14px;background:#fff3ea;border:1px solid #ffd3b7;font-weight:800;line-height:1.35}
+    code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid #ffd3b7;background:#fff;font-size:12px;color:#222;font-weight:900;margin-top:8px}
+
+    .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
+    .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
+    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
+    .opt input{margin-right:10px;transform:translateY(1px)}
+    .opt.correct{border-color:var(--ok);background:#e9f7ee}
+    .opt.wrong{border-color:var(--bad);background:#fdecee}
+    .fb{margin-top:8px;font-weight:900}
+    .fb.ok{color:var(--ok)}
+    .fb.bad{color:var(--bad)}
+
+    .controls{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      margin:18px 0 26px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
+    .btn-primary{background:var(--hc-orange);color:#fff}
+    .btn-primary:hover{background:var(--hc-orange-dark)}
+    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
+    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Quiz Bono Uninivel</h1>
+      <p class="sub">Ahora te toca a ti. 🔥 Calcula el Uninivel como si fuera tu semana real.</p>
+      <p class="rule">
+        Regla: del <b>nivel 1 al nivel 6</b>, cobras <code>5% del CV</code> de <b>cada recompra</b> de tu linaje directo.<br>
+        <span class="pill">Pago por recompra = CV × 0.05 (por nivel)</span>
+      </p>
+    </div>
+
+    <div id="quiz"></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
+      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
+      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz — Bono Uninivel</div>
+  </div>
+
+<script>
+  const fmtUsd = (n) => Number(n).toFixed(2).replace(/\.00$/,'');
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  };
+  const pickN = (arr,n) => shuffle(arr).slice(0,n);
+
+  const rate = 0.05;
+
+  // Construye texto "Total Uninivel: XX.XX USD"
+  const optText = (usd) => `Total Uninivel: ${fmtUsd(usd)} USD`;
+
+  // Banco: cada pregunta describe recompras por nivel (1..6). Total = suma(CV × 0.05)
+  // Mantengo CV típicos (50, 70, 100, 150, 225, 300) para que se sienta como HCW.
+  const BANK = [
+    // Directas (1-2 niveles)
+    {id:"u1",  desc:{1:[225]},                note:"Nivel 1: 1 recompra de 225 CV", correct:225*rate},
+    {id:"u2",  desc:{2:[225,225]},            note:"Nivel 2: 2 recompras de 225 CV", correct:(225+225)*rate},
+    {id:"u3",  desc:{1:[150,150,150]},        note:"Nivel 1: 3 recompras de 150 CV", correct:(150*3)*rate},
+    {id:"u4",  desc:{3:[300]},                note:"Nivel 3: 1 recompra de 300 CV", correct:300*rate},
+    {id:"u5",  desc:{1:[70],2:[70]},          note:"Nivel 1: 70 CV, Nivel 2: 70 CV", correct:(70+70)*rate},
+
+    // Escenarios (3-6 niveles)
+    {id:"u6",  desc:{1:[225,225,225],2:[225,225]}, note:"N1: 3×225 CV, N2: 2×225 CV", correct:(225*5)*rate},
+    {id:"u7",  desc:{1:[100,100],2:[70],3:[50,50,50]}, note:"N1: 2×100, N2: 70, N3: 3×50", correct:(200+70+150)*rate},
+    {id:"u8",  desc:{4:[150,150],5:[225],6:[70,70]}, note:"N4: 2×150, N5: 225, N6: 2×70", correct:(300+225+140)*rate},
+    {id:"u9",  desc:{1:[300],2:[225],3:[150],4:[100],5:[70],6:[50]}, note:"N1..N6: 300,225,150,100,70,50", correct:(300+225+150+100+70+50)*rate},
+    {id:"u10", desc:{2:[300,300],5:[225,225,225]}, note:"N2: 2×300, N5: 3×225", correct:(600+675)*rate},
+
+    // Más para rotación
+    {id:"u11", desc:{1:[50,50,50,50],2:[50,50]}, note:"N1: 4×50, N2: 2×50", correct:(200+100)*rate},
+    {id:"u12", desc:{3:[225,225],4:[225],6:[225]}, note:"N3: 2×225, N4: 225, N6: 225", correct:(450+225+225)*rate},
+    {id:"u13", desc:{1:[70,70,70],2:[100],3:[150],4:[225]}, note:"N1: 3×70, N2:100, N3:150, N4:225", correct:(210+100+150+225)*rate},
+    {id:"u14", desc:{1:[300,150],2:[300],3:[70,70],5:[100,100]}, note:"N1:300+150, N2:300, N3:2×70, N5:2×100", correct:(450+300+140+200)*rate},
+    {id:"u15", desc:{6:[300,225,150]}, note:"N6: 300+225+150", correct:(675)*rate},
+    {id:"u16", desc:{1:[225],2:[225],3:[225],4:[225],5:[225],6:[225]}, note:"N1..N6: 1 recompra de 225 CV en cada nivel", correct:(225*6)*rate},
+    {id:"u17", desc:{2:[150,150,150],4:[70,70,70,70]}, note:"N2: 3×150, N4: 4×70", correct:(450+280)*rate},
+    {id:"u18", desc:{1:[100],3:[100],5:[100],6:[100]}, note:"N1, N3, N5, N6: 100 CV cada una", correct:(400)*rate},
+    {id:"u19", desc:{1:[300,300],2:[225,225],3:[150,150],4:[100,100]}, note:"N1:2×300 N2:2×225 N3:2×150 N4:2×100", correct:(600+450+300+200)*rate},
+    {id:"u20", desc:{1:[70],2:[70],3:[70],4:[70],5:[70],6:[70]}, note:"N1..N6: 70 CV en cada nivel", correct:(70*6)*rate},
+    {id:"u21", desc:{1:[225,225],6:[225,225]}, note:"N1:2×225, N6:2×225", correct:(900)*rate},
+    {id:"u22", desc:{4:[300],5:[300],6:[300]}, note:"N4:300, N5:300, N6:300", correct:(900)*rate},
+    {id:"u23", desc:{1:[150],2:[150],3:[150],4:[150]}, note:"N1..N4: 150 CV cada nivel", correct:(600)*rate},
+    {id:"u24", desc:{2:[50,70,100],3:[150,225]}, note:"N2:50+70+100, N3:150+225", correct:(220+375)*rate},
+    {id:"u25", desc:{1:[225,70],2:[150],5:[300],6:[50,50]}, note:"N1:225+70, N2:150, N5:300, N6:2×50", correct:(295+150+300+100)*rate},
+  ];
+
+  // Crear opciones realistas
+  function buildOptions(correct){
+    const w1 = correct * 2;               // error típico: creer que paga 10% o duplicar
+    const w2 = Math.max(0, correct - 5);  // error típico: restar mal
+    const w3 = correct + 7.5;             // error típico: sumar un nivel extra
+    return shuffle([correct, w1, w2, w3]).map(v => ({t: optText(v), v}));
+  }
+
+  let current = [];
+
+  function render(){
+    const host = document.getElementById("quiz");
+    host.innerHTML = "";
+    document.getElementById("score").textContent = "";
+
+    current = pickN(BANK, 10).map(x => ({...x}));
+
+    current.forEach((q, i) => {
+      const options = buildOptions(q.correct);
+      q._correctText = optText(q.correct);
+
+      const levels = Object.keys(q.desc).sort((a,b)=>Number(a)-Number(b)).map(k=>{
+        const arr = q.desc[k];
+        const sum = arr.reduce((s,n)=>s+n,0);
+        return `• Nivel ${k}: ${arr.length} recompra(s), total ${sum} CV`;
+      }).join("<br>");
+
+      const card = document.createElement("div");
+      card.className = "q";
+      card.innerHTML = `
+        <div class="q-title">P${i+1}. Cálculo de Uninivel</div>
+        <div class="q-desc">
+          ${q.note}<br>
+          ${levels}<br>
+          Pregunta: ¿Cuál es el <b>total</b> del Bono Uninivel (USD) considerando 5% del CV por recompra?
+        </div>
+        <div class="opts">
+          ${options.map(o=>`
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${o.t}">
+              ${o.t}
+            </label>
+          `).join("")}
+        </div>
+        <div class="fb" id="fb-${q.id}"></div>
+      `;
+      host.appendChild(card);
+
+      q._explain = `Se suma todo el CV indicado por niveles y se multiplica por 0.05. Total correcto: ${optText(q.correct)}.`;
+    });
+  }
+
+  function check(){
+    let ok = 0;
+    let total = 0;
+
+    current.forEach(q=>{
+      total++;
+      const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+      const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+      const fb = document.getElementById(`fb-${q.id}`);
+
+      inputs.forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+
+      if(!picked){
+        fb.className = "fb bad";
+        fb.textContent = "Elige una opción.";
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const lab = inp.closest(".opt");
+        const isCorrect = (inp.value === q._correctText);
+        if(isCorrect) lab.classList.add("correct");
+        if(inp.checked && !isCorrect) lab.classList.add("wrong");
+      });
+
+      const isOk = (picked.value === q._correctText);
+      if(isOk){
+        ok++;
+        fb.className = "fb ok";
+        fb.textContent = "Correcto ✅";
+      } else {
+        fb.className = "fb bad";
+        fb.textContent = `Incorrecto ❌  ${q._explain}`;
+      }
+    });
+
+    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+  }
+
+  function reset(){
+    current.forEach(q=>{
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+      const fb = document.getElementById(`fb-${q.id}`);
+      if(fb){ fb.className="fb"; fb.textContent=""; }
+    });
+    document.getElementById("score").textContent = "";
+  }
+
+  document.getElementById("btnNew").addEventListener("click", render);
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnReset").addEventListener("click", reset);
+
+  render();
+</script>
+</body>
+</html>
+head -n 3 ~/Desktop/uninivel/index.html
