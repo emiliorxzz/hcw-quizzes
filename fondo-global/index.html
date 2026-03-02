@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Fondo Global — HC Wellness</title>
+  <style>
+    :root{
+      --hc-orange:#de7319;
+      --hc-orange-dark:#a3441f;
+      --ok:#0a7a2f;
+      --bad:#b00020;
+      --ink:#111;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f6f5f2;
+      --line:#e6e6e6;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04);}
+    h1{margin:0 0 6px;font-size:22px;text-align:center;color:var(--hc-orange-dark)}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
+    .rule{margin:0;padding:12px 14px;border-radius:14px;background:#fff3ea;border:1px solid #ffd3b7;font-weight:800;line-height:1.35}
+    code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid #ffd3b7;background:#fff;font-size:12px;color:#222;font-weight:900;margin-top:8px}
+
+    .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
+    .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
+    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
+    .opt input{margin-right:10px;transform:translateY(1px)}
+    .opt.correct{border-color:var(--ok);background:#e9f7ee}
+    .opt.wrong{border-color:var(--bad);background:#fdecee}
+    .fb{margin-top:8px;font-weight:900}
+    .fb.ok{color:var(--ok)}
+    .fb.bad{color:var(--bad)}
+
+    .controls{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      margin:18px 0 26px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
+    .btn-primary{background:var(--hc-orange);color:#fff}
+    .btn-primary:hover{background:var(--hc-orange-dark)}
+    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
+    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Quiz Fondo Global</h1>
+      <p class="sub">Ahora te toca a ti. 🔥 Calcula tu pago del Fondo Global como si fuera un cierre real.</p>
+      <p class="rule">
+        Regla del plan: <b>7% de las ventas globales</b> se asigna al Fondo Global y se divide en <b>acciones</b>. El pago se multiplica por tus acciones.<br>
+        <span class="pill">En el quiz verás 2 tipos de preguntas: (1) ya te dan el valor por acción y (2) te dan fondo + total de acciones.</span>
+      </p>
+    </div>
+
+    <div id="quiz"></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
+      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
+      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz — Fondo Global</div>
+  </div>
+
+<script>
+  const fmtUsd = (n) => Number(n).toFixed(2).replace(/\.00$/,'');
+  const fmtInt = (n) => Number(n).toLocaleString("en-US");
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  };
+  const pickN = (arr,n) => shuffle(arr).slice(0,n);
+
+  // Acciones por rango (según cuadro del plan)
+  const ACTIONS = {
+    "Bronce":1,
+    "Plata":2,
+    "Oro":3,
+    "Platino":4,
+    "Diamante":5,
+    "Diamante Azul":6,
+    "Diamante Negro":7,
+    "Doble Diamante":8,
+    "Doble Diamante Azul":9,
+    "Doble Diamante Negro":10,
+    "Triple Diamante":11,
+    "Triple Diamante Azul":12,
+    "Triple Diamante Negro":13
+  };
+
+  const optText = (usd) => `Pago Fondo Global: $${fmtUsd(usd)} USD`;
+
+  function buildOptions(correct){
+    const w1 = correct * 2;               // error típico: duplicar
+    const w2 = Math.max(0, correct - 40); // error típico: restar fijo
+    const w3 = correct + 50;              // error típico: sumar de más
+    return shuffle([correct, w1, w2, w3]).map(v => optText(v));
+  }
+
+  // Banco de 25 preguntas: mezcla de
+  // A) Te dan valor por acción (40–50) y rango → pago = acciones×valor
+  // B) Te dan ventas globales y total de acciones calificadas → fondo=ventas×0.07, valorAccion=fondo/totalAcciones, pago=accionesSocio×valorAccion
+  const BANK = [
+    // Tipo A (valor por acción dado)
+    {id:"a1",  type:"A", rank:"Diamante", actionValue:45},
+    {id:"a2",  type:"A", rank:"Plata", actionValue:40},
+    {id:"a3",  type:"A", rank:"Doble Diamante", actionValue:50},
+    {id:"a4",  type:"A", rank:"Diamante Azul", actionValue:42},
+    {id:"a5",  type:"A", rank:"Oro", actionValue:48},
+    {id:"a6",  type:"A", rank:"Triple Diamante Negro", actionValue:45},
+    {id:"a7",  type:"A", rank:"Platino", actionValue:50},
+    {id:"a8",  type:"A", rank:"Diamante Negro", actionValue:44},
+    {id:"a9",  type:"A", rank:"Bronce", actionValue:47},
+    {id:"a10", type:"A", rank:"Doble Diamante Azul", actionValue:41},
+    {id:"a11", type:"A", rank:"Triple Diamante Azul", actionValue:49},
+    {id:"a12", type:"A", rank:"Doble Diamante Negro", actionValue:40},
+
+    // Tipo B (ventas + total acciones)
+    {id:"b1", type:"B", rank:"Diamante", globalSales:500000, totalActions:800},   // fondo 35,000
+    {id:"b2", type:"B", rank:"Plata", globalSales:300000, totalActions:500},     // fondo 21,000
+    {id:"b3", type:"B", rank:"Oro", globalSales:800000, totalActions:1200},      // fondo 56,000
+    {id:"b4", type:"B", rank:"Diamante Azul", globalSales:600000, totalActions:900}, // fondo 42,000
+    {id:"b5", type:"B", rank:"Doble Diamante", globalSales:1000000, totalActions:1500}, // fondo 70,000
+    {id:"b6", type:"B", rank:"Platino", globalSales:450000, totalActions:700},   // fondo 31,500
+    {id:"b7", type:"B", rank:"Diamante Negro", globalSales:900000, totalActions:1400}, // fondo 63,000
+    {id:"b8", type:"B", rank:"Triple Diamante", globalSales:1200000, totalActions:2000}, // fondo 84,000
+    {id:"b9", type:"B", rank:"Bronce", globalSales:250000, totalActions:600},    // fondo 17,500
+    {id:"b10",type:"B", rank:"Doble Diamante Azul", globalSales:700000, totalActions:1100}, // fondo 49,000
+    {id:"b11",type:"B", rank:"Doble Diamante Negro", globalSales:850000, totalActions:1300}, // fondo 59,500
+    {id:"b12",type:"B", rank:"Triple Diamante Negro", globalSales:1500000, totalActions:2600}, // fondo 105,000
+    {id:"b13",type:"B", rank:"Diamante", globalSales:400000, totalActions:650}   // fondo 28,000
+  ];
+
+  function compute(q){
+    const actions = ACTIONS[q.rank];
+    if(q.type === "A"){
+      const pay = actions * q.actionValue;
+      return {
+        pay,
+        explain:`Acciones de ${q.rank}: ${actions}. Valor por acción: $${fmtUsd(q.actionValue)}. Pago: ${actions}×${fmtUsd(q.actionValue)} = $${fmtUsd(pay)}.`
+      };
+    } else {
+      const fund = q.globalSales * 0.07;
+      const actionValue = fund / q.totalActions;
+      const pay = actions * actionValue;
+      return {
+        pay,
+        explain:`Fondo = ${fmtInt(q.globalSales)}×0.07 = $${fmtUsd(fund)}. Valor acción = ${fmtUsd(fund)}/${fmtInt(q.totalActions)} = $${fmtUsd(actionValue)}. Acciones (${q.rank})=${actions}. Pago=$${fmtUsd(pay)}.`
+      };
+    }
+  }
+
+  let current = [];
+
+  function render(){
+    const host = document.getElementById("quiz");
+    host.innerHTML = "";
+    document.getElementById("score").textContent = "";
+
+    current = pickN(BANK, 10).map(x => ({...x}));
+
+    current.forEach((q, i) => {
+      const {pay, explain} = compute(q);
+      q._correctText = optText(pay);
+      q._explain = explain;
+
+      const options = buildOptions(pay);
+
+      let desc = "";
+      if(q.type === "A"){
+        desc = `
+          Rango: <b>${q.rank}</b><br>
+          Valor por acción (este periodo): <b>$${fmtUsd(q.actionValue)} USD</b><br>
+          Pregunta: ¿Cuál es tu pago total del Fondo Global?
+        `;
+      } else {
+        desc = `
+          Rango: <b>${q.rank}</b><br>
+          Ventas globales del periodo: <b>$${fmtInt(q.globalSales)} USD</b><br>
+          Fondo Global (7%): se calcula con esas ventas.<br>
+          Total de acciones calificadas del periodo: <b>${fmtInt(q.totalActions)}</b><br>
+          Pregunta: ¿Cuál es tu pago total del Fondo Global?
+        `;
+      }
+
+      const card = document.createElement("div");
+      card.className = "q";
+      card.innerHTML = `
+        <div class="q-title">P${i+1}. Cálculo del Fondo Global</div>
+        <div class="q-desc">${desc}</div>
+        <div class="opts">
+          ${options.map(o=>`
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${o}">
+              ${o}
+            </label>
+          `).join("")}
+        </div>
+        <div class="fb" id="fb-${q.id}"></div>
+      `;
+      host.appendChild(card);
+    });
+  }
+
+  function check(){
+    let ok = 0;
+    let total = 0;
+
+    current.forEach(q=>{
+      total++;
+      const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+      const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+      const fb = document.getElementById(`fb-${q.id}`);
+
+      inputs.forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+
+      if(!picked){
+        fb.className = "fb bad";
+        fb.textContent = "Elige una opción.";
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const lab = inp.closest(".opt");
+        const isCorrect = (inp.value === q._correctText);
+        if(isCorrect) lab.classList.add("correct");
+        if(inp.checked && !isCorrect) lab.classList.add("wrong");
+      });
+
+      const isOk = (picked.value === q._correctText);
+      if(isOk){
+        ok++;
+        fb.className = "fb ok";
+        fb.textContent = "Correcto ✅";
+      } else {
+        fb.className = "fb bad";
+        fb.textContent = `Incorrecto ❌  ${q._explain}`;
+      }
+    });
+
+    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+  }
+
+  function reset(){
+    current.forEach(q=>{
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+      const fb = document.getElementById(`fb-${q.id}`);
+      if(fb){ fb.className="fb"; fb.textContent=""; }
+    });
+    document.getElementById("score").textContent = "";
+  }
+
+  document.getElementById("btnNew").addEventListener("click", render);
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnReset").addEventListener("click", reset);
+
+  render();
+</script>
+</body>
+</html>
