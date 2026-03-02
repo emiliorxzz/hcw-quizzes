@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Bono de Inicio Rápido</title>
+  <style>
+    :root{--ok:#0a7a2f;--bad:#b00020;--ink:#111;--muted:#666;--card:#fff;--bg:#f6f5f2;--line:#e6e6e6;}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;}
+    h1{margin:0 0 6px;font-size:22px;text-align:center}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
+    .rule{margin:0;padding:10px 12px;border-radius:14px;background:#fff7e8;border:1px solid #ffe2b3;font-weight:800}
+    code{background:#f2f2f2;padding:1px 6px;border-radius:8px}
+    .section-title{margin:18px 0 6px;font-size:16px;font-weight:900;color:#222}
+    .q{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin:12px 0}
+    .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
+    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
+    .opt input{margin-right:10px;transform:translateY(1px)}
+    .opt.correct{border-color:var(--ok);background:#e9f7ee}
+    .opt.wrong{border-color:var(--bad);background:#fdecee}
+    .fb{margin-top:8px;font-weight:900}
+    .fb.ok{color:var(--ok)}
+    .fb.bad{color:var(--bad)}
+    .controls{
+      background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin:18px 0 26px;
+      display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;
+    }
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
+    .btn-primary{background:#000;color:#fff}
+    .btn-outline{background:#fff;color:#000;border:1px solid #000}
+    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Quiz Bono de Inicio Rápido</h1>
+      <p class="sub">Cada intento genera 10 preguntas (cálculo + escenarios). Presiona <b>Nueva versión</b> para cambiar.</p>
+      <p class="rule">
+        Reglas: 1 inscripción en el periodo = <code>25% del CV</code>. &nbsp; 2+ inscripciones en el periodo = <code>40% del CV</code>. &nbsp; (25% + 15% adicional)
+      </p>
+    </div>
+
+    <div class="section-title">Examen</div>
+    <div id="quiz"></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
+      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
+      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz Inicio Rápido</div>
+  </div>
+
+<script>
+  const fmt = (n) => {
+    const num = Number(n);
+    if (Number.isInteger(num)) return num.toString();
+    return num.toFixed(2).replace(/\.00$/,'');
+  };
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  };
+  const pickN = (arr,n) => shuffle(arr).slice(0,n);
+
+  // Helpers de cálculo
+  const bonusRate = (inscripcionesEnPeriodo) => (inscripcionesEnPeriodo >= 2 ? 0.40 : 0.25);
+  const calcBonus = (cv, inscripcionesEnPeriodo) => cv * bonusRate(inscripcionesEnPeriodo);
+
+  // Banco A: cálculo directo (15)
+  const BANK_A = [
+    {id:"a1",  q:"Tienes 1 inscripción en el periodo. Primera orden = 225 CV. ¿Bono?", options:[56.25,90,45], correct:56.25, exp:"1 inscripción: 225×0.25=56.25."},
+    {id:"a2",  q:"Tienes 2 inscripciones en el periodo. Primera orden = 225 CV. ¿Bono?", options:[90,56.25,67.5], correct:90, exp:"2+ inscripciones: 225×0.40=90."},
+    {id:"a3",  q:"Tienes 1 inscripción en el periodo. Primera orden = 50 CV. ¿Bono?", options:[12.5,20,10], correct:12.5, exp:"1 inscripción: 50×0.25=12.5."},
+    {id:"a4",  q:"Tienes 2+ inscripciones en el periodo. Primera orden = 50 CV. ¿Bono?", options:[20,12.5,25], correct:20, exp:"2+ inscripciones: 50×0.40=20."},
+    {id:"a5",  q:"Tienes 1 inscripción en el periodo. Primera orden = 70 CV. ¿Bono?", options:[17.5,28,35], correct:17.5, exp:"1 inscripción: 70×0.25=17.5."},
+    {id:"a6",  q:"Tienes 2+ inscripciones en el periodo. Primera orden = 70 CV. ¿Bono?", options:[28,17.5,21], correct:28, exp:"2+ inscripciones: 70×0.40=28."},
+    {id:"a7",  q:"Tienes 1 inscripción en el periodo. Primera orden = 300 CV. ¿Bono?", options:[75,120,90], correct:75, exp:"1 inscripción: 300×0.25=75."},
+    {id:"a8",  q:"Tienes 2+ inscripciones en el periodo. Primera orden = 300 CV. ¿Bono?", options:[120,75,105], correct:120, exp:"2+ inscripciones: 300×0.40=120."},
+    {id:"a9",  q:"Tienes 1 inscripción en el periodo. Primera orden = 150 CV. ¿Bono?", options:[37.5,60,45], correct:37.5, exp:"1 inscripción: 150×0.25=37.5."},
+    {id:"a10", q:"Tienes 2+ inscripciones en el periodo. Primera orden = 150 CV. ¿Bono?", options:[60,37.5,67.5], correct:60, exp:"2+ inscripciones: 150×0.40=60."},
+    {id:"a11", q:"Tienes 2+ inscripciones en el periodo. Primera orden = 100 CV. ¿Bono?", options:[40,25,30], correct:40, exp:"2+ inscripciones: 100×0.40=40."},
+    {id:"a12", q:"Tienes 1 inscripción en el periodo. Primera orden = 100 CV. ¿Bono?", options:[25,40,20], correct:25, exp:"1 inscripción: 100×0.25=25."},
+    {id:"a13", q:"Con 2+ inscripciones, ¿cuánto % adicional se suma al 25% base?", options:[15,10,5], correct:15, exp:"Se suma 15% adicional para llegar a 40%."},
+    {id:"a14", q:"Si haces 2+ inscripciones, ¿qué % total cobras en Inicio Rápido?", options:[40,25,30], correct:40, exp:"25% + 15% = 40%."},
+    {id:"a15", q:"¿Qué porcentaje del CV de esas órdenes va a otros bonos?", options:[50,25,40], correct:50, exp:"El 50% del CV va a los demás bonos."}
+  ];
+
+  // Banco B: escenarios (15) — sumas de varias inscripciones en el periodo
+  // Nota: si hay 2+ inscripciones, todas se pagan al 40% (según la regla del periodo).
+  const BANK_B = [
+    {id:"b1", q:"En el periodo hiciste 1 inscripción. CV de la primera orden: 225. ¿Total de bono?", options:[56.25,90,45], correct:56.25, exp:"1 inscripción: 225×0.25=56.25."},
+    {id:"b2", q:"En el periodo hiciste 2 inscripciones: 225 CV y 50 CV. ¿Total de bono?", options:[110,102.5,90], correct:110, exp:"2+ inscripciones: 225×0.40=90 y 50×0.40=20. Total=110."},
+    {id:"b3", q:"En el periodo hiciste 2 inscripciones: 70 CV y 70 CV. ¿Total de bono?", options:[56,35,70], correct:56, exp:"2+ inscripciones: 70×0.40=28. 28+28=56."},
+    {id:"b4", q:"En el periodo hiciste 3 inscripciones: 300 CV, 150 CV y 50 CV. ¿Total de bono?", options:[200,125,180], correct:200, exp:"2+ inscripciones: 300×0.40=120; 150×0.40=60; 50×0.40=20. Total=200."},
+    {id:"b5", q:"En el periodo hiciste 1 inscripción con 50 CV. ¿Total de bono?", options:[12.5,20,10], correct:12.5, exp:"1 inscripción: 50×0.25=12.5."},
+    {id:"b6", q:"En el periodo hiciste 2 inscripciones: 100 CV y 100 CV. ¿Total de bono?", options:[80,50,60], correct:80, exp:"2+ inscripciones: 100×0.40=40. 40+40=80."},
+    {id:"b7", q:"En el periodo hiciste 4 inscripciones: 70, 70, 70 y 70 CV. ¿Total de bono?", options:[112,70,140], correct:112, exp:"2+ inscripciones: cada 70×0.40=28. 28×4=112."},
+    {id:"b8", q:"En el periodo hiciste 2 inscripciones: 150 CV y 225 CV. ¿Total de bono?", options:[150,131.25,127.5], correct:150, exp:"2+ inscripciones: 150×0.40=60 y 225×0.40=90. Total=150."},
+    {id:"b9", q:"En el periodo hiciste 3 inscripciones: 225, 225 y 225 CV. ¿Total de bono?", options:[270,168.75,225], correct:270, exp:"2+ inscripciones: cada 225×0.40=90. 90×3=270."},
+    {id:"b10", q:"En el periodo hiciste 2 inscripciones: 300 CV y 300 CV. ¿Total de bono?", options:[240,150,180], correct:240, exp:"2+ inscripciones: 300×0.40=120. 120+120=240."},
+    {id:"b11", q:"En el periodo hiciste 2 inscripciones: 50 CV y 70 CV. ¿Total de bono?", options:[48,30,42.5], correct:48, exp:"2+ inscripciones: 50×0.40=20 y 70×0.40=28. Total=48."},
+    {id:"b12", q:"En el periodo hiciste 1 inscripción con 150 CV. ¿Total de bono?", options:[37.5,60,45], correct:37.5, exp:"1 inscripción: 150×0.25=37.5."},
+    {id:"b13", q:"En el periodo hiciste 2 inscripciones: 225 CV y 225 CV. ¿Total de bono?", options:[180,112.5,135], correct:180, exp:"2+ inscripciones: 90 + 90 = 180."},
+    {id:"b14", q:"En el periodo hiciste 3 inscripciones: 100 CV, 150 CV, 300 CV. ¿Total de bono?", options:[220,137.5,175], correct:220, exp:"2+ inscripciones: 40 + 60 + 120 = 220."},
+    {id:"b15", q:"En el periodo hiciste 2 inscripciones: 70 CV y 300 CV. ¿Total de bono?", options:[148,92.5,120], correct:148, exp:"2+ inscripciones: 70×0.40=28 y 300×0.40=120. Total=148."}
+  ];
+
+  let current = [];
+
+  function render(){
+    const host = document.getElementById("quiz");
+    host.innerHTML = "";
+    document.getElementById("score").textContent = "";
+
+    const pickA = pickN(BANK_A, 5);
+    const pickB = pickN(BANK_B, 5);
+    current = shuffle([...pickA, ...pickB]);
+
+    current.forEach((q, i) => {
+      const card = document.createElement("div");
+      card.className = "q";
+      card.innerHTML = `
+        <div class="q-title">P${i+1}. ${q.q}</div>
+        <div class="q-desc">Elige una opción.</div>
+        <div class="opts">
+          ${q.options.map(opt => `
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${opt}">
+              ${fmt(opt)}
+            </label>
+          `).join("")}
+        </div>
+        <div class="fb" id="fb-${q.id}"></div>
+      `;
+      host.appendChild(card);
+    });
+  }
+
+  function check(){
+    let ok = 0;
+    let total = 0;
+
+    current.forEach(q => {
+      total++;
+      const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+      const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+      const fb = document.getElementById(`fb-${q.id}`);
+
+      inputs.forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+
+      if(!picked){
+        fb.className = "fb bad";
+        fb.textContent = "Elige una opción.";
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const lab = inp.closest(".opt");
+        const isCorrect = String(inp.value) === String(q.correct);
+        if(isCorrect) lab.classList.add("correct");
+        if(inp.checked && !isCorrect) lab.classList.add("wrong");
+      });
+
+      const isOk = String(picked.value) === String(q.correct);
+      if(isOk){
+        ok++;
+        fb.className = "fb ok";
+        fb.textContent = "Correcto ✅";
+      } else {
+        fb.className = "fb bad";
+        fb.textContent = `Incorrecto ❌  ${q.exp}`;
+      }
+    });
+
+    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+  }
+
+  function reset(){
+    current.forEach(q=>{
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+      const fb = document.getElementById(`fb-${q.id}`);
+      if(fb){ fb.className="fb"; fb.textContent=""; }
+    });
+    document.getElementById("score").textContent = "";
+  }
+
+  document.getElementById("btnNew").addEventListener("click", render);
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnReset").addEventListener("click", reset);
+
+  render();
+</script>
+</body>
+</html>
