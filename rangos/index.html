@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz de Rangos — Regla del 60% (HC Wellness)</title>
+  <style>
+    :root{
+      --hc-orange:#de7319;
+      --hc-orange-dark:#a3441f;
+      --ok:#0a7a2f;
+      --bad:#b00020;
+      --ink:#111;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f6f5f2;
+      --line:#e6e6e6;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04);}
+    h1{margin:0 0 6px;font-size:22px;text-align:center;color:var(--hc-orange-dark)}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
+    .rule{margin:0;padding:12px 14px;border-radius:14px;background:#fff3ea;border:1px solid #ffd3b7;font-weight:800;line-height:1.35}
+    code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
+
+    .section-title{margin:18px 0 6px;font-size:16px;font-weight:900;color:#222}
+    .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
+    .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
+    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
+    .opt input{margin-right:10px;transform:translateY(1px)}
+    .opt.correct{border-color:var(--ok);background:#e9f7ee}
+    .opt.wrong{border-color:var(--bad);background:#fdecee}
+    .fb{margin-top:8px;font-weight:900}
+    .fb.ok{color:var(--ok)}
+    .fb.bad{color:var(--bad)}
+
+    .controls{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      margin:18px 0 26px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
+    .btn-primary{background:var(--hc-orange);color:#fff}
+    .btn-primary:hover{background:var(--hc-orange-dark)}
+    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
+    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Quiz de Rangos — Regla del 60%</h1>
+      <p class="sub">
+        Cada intento genera <b>10 preguntas</b>: 5 sobre <b>máximo por pierna</b> y 5 sobre <b>calificar por QV</b>.
+      </p>
+      <p class="rule">
+        Regla del 60%: en un rango, <b>una sola pierna/rama</b> solo puede aportar hasta el <b>60% del QV requerido</b>.<br>
+        Fórmula: <code>Máximo por pierna = QV requerido × 0.60</code>
+      </p>
+    </div>
+
+    <div class="section-title">Sección A — Máximo por pierna</div>
+    <div id="secMax"></div>
+
+    <div class="section-title">Sección B — ¿Califica por QV?</div>
+    <div id="secQual"></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
+      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
+      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz Rangos (Regla del 60%)</div>
+  </div>
+
+<script>
+  const fmt = (n) => Number(n).toLocaleString("en-US");
+  const cap60 = (req) => Math.round(req * 0.60);
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+  function pickN(arr,n){ return shuffle(arr).slice(0,n); }
+
+  // ========= BANCO A (25) =========
+  // Pregunta mejor formulada: "Para el rango X que requiere Y QV, ¿cuál es el máximo permitido en una sola pierna?"
+  const BANK_MAX = [
+    {id:"m1", rank:"Ejecutivo 500", req:150,  options:[90, 75, 105], correct:90,  explain:"Máximo: 150×0.60=90."},
+    {id:"m2", rank:"Ejecutivo 1K",  req:250,  options:[150, 135, 180], correct:150, explain:"Máximo: 250×0.60=150."},
+    {id:"m3", rank:"Ejecutivo 2K",  req:500,  options:[300, 360, 375], correct:300, explain:"Máximo: 500×0.60=300."},
+    {id:"m4", rank:"Ejecutivo 3K",  req:750,  options:[450, 525, 500], correct:450, explain:"Máximo: 750×0.60=450."},
+    {id:"m5", rank:"Bronce",        req:1500, options:[900, 750, 1000], correct:900, explain:"Máximo: 1,500×0.60=900."},
+    {id:"m6", rank:"Plata",         req:3000, options:[1800, 1500, 2100], correct:1800, explain:"Máximo: 3,000×0.60=1,800."},
+    {id:"m7", rank:"Oro",           req:5000, options:[3000, 2500, 3500], correct:3000, explain:"Máximo: 5,000×0.60=3,000."},
+    {id:"m8", rank:"Platino",       req:15000,options:[9000, 7500, 12000], correct:9000, explain:"Máximo: 15,000×0.60=9,000."},
+    {id:"m9", rank:"Diamante",      req:25000,options:[15000, 12500, 18000], correct:15000, explain:"Máximo: 25,000×0.60=15,000."},
+    {id:"m10",rank:"Diamante Azul", req:50000,options:[30000, 25000, 35000], correct:30000, explain:"Máximo: 50,000×0.60=30,000."},
+    {id:"m11",rank:"Diamante Negro",req:75000,options:[45000, 50000, 40000], correct:45000, explain:"Máximo: 75,000×0.60=45,000."},
+    {id:"m12",rank:"Doble Diamante",req:125000,options:[75000, 65000, 80000], correct:75000, explain:"Máximo: 125,000×0.60=75,000."},
+    {id:"m13",rank:"Doble Diamante Azul",req:175000,options:[105000, 94500, 131250], correct:105000, explain:"Máximo: 175,000×0.60=105,000."},
+    {id:"m14",rank:"Doble Diamante Negro",req:225000,options:[135000, 150000, 120000], correct:135000, explain:"Máximo: 225,000×0.60=135,000."},
+    {id:"m15",rank:"Triple Diamante",req:300000,options:[180000, 150000, 200000], correct:180000, explain:"Máximo: 300,000×0.60=180,000."},
+    {id:"m16",rank:"Triple Diamante Azul",req:400000,options:[240000, 200000, 260000], correct:240000, explain:"Máximo: 400,000×0.60=240,000."},
+    {id:"m17",rank:"Triple Diamante Negro",req:500000,options:[300000, 250000, 320000], correct:300000, explain:"Máximo: 500,000×0.60=300,000."},
+    {id:"m18",rank:"Bronce", req:1500, options:[900, 960, 840], correct:900, explain:"Máximo: 1,500×0.60=900."},
+    {id:"m19",rank:"Plata",  req:3000, options:[1800, 1650, 1950], correct:1800, explain:"Máximo: 3,000×0.60=1,800."},
+    {id:"m20",rank:"Oro",    req:5000, options:[3000, 2800, 3200], correct:3000, explain:"Máximo: 5,000×0.60=3,000."},
+    {id:"m21",rank:"Platino",req:15000,options:[9000, 8700, 9300], correct:9000, explain:"Máximo: 15,000×0.60=9,000."},
+    {id:"m22",rank:"Diamante",req:25000,options:[15000, 14000, 16000], correct:15000, explain:"Máximo: 25,000×0.60=15,000."},
+    {id:"m23",rank:"Diamante Azul",req:50000,options:[30000, 28000, 32000], correct:30000, explain:"Máximo: 50,000×0.60=30,000."},
+    {id:"m24",rank:"Doble Diamante",req:125000,options:[75000, 70000, 90000], correct:75000, explain:"Máximo: 125,000×0.60=75,000."},
+    {id:"m25",rank:"Triple Diamante Negro",req:500000,options:[300000, 280000, 350000], correct:300000, explain:"Máximo: 500,000×0.60=300,000."},
+  ];
+
+  // ========= BANCO B: 25 (15 de 2 ramas, 5 de 3 ramas, 5 de 4 ramas) =========
+  // Pregunta mejor formulada: "Con estos QV por rama, aplicando el máximo por rama, ¿califica por QV?"
+  const BANK_QUAL_2 = [
+    {id:"q2_1", rank:"Diamante", req:25000,
+      branches:[{name:"Alba Sánchez",qv:15000},{name:"Juan Pérez",qv:10500}],
+      options:["Sí califica por QV","No califica por QV","Califica solo si agrega otra rama"], correct:"Sí califica por QV",
+      explain:"Tope=15,000. QV válido=15,000+10,500=25,500 (>=25,000)."},
+    {id:"q2_2", rank:"Oro", req:5000,
+      branches:[{name:"Rama A",qv:4200},{name:"Rama B",qv:1200}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=3,000. QV válido=3,000+1,200=4,200 (<5,000)."},
+    {id:"q2_3", rank:"Oro", req:5000,
+      branches:[{name:"Rama A",qv:2900},{name:"Rama B",qv:2300}],
+      options:["Sí califica por QV","No califica por QV","Califica solo si sube Rama A"], correct:"Sí califica por QV",
+      explain:"Tope=3,000. QV válido=2,900+2,300=5,200 (>=5,000)."},
+    {id:"q2_4", rank:"Platino", req:15000,
+      branches:[{name:"Rama A",qv:10000},{name:"Rama B",qv:7000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo con 3 ramas"], correct:"Sí califica por QV",
+      explain:"Tope=9,000. QV válido=9,000+7,000=16,000 (>=15,000)."},
+    {id:"q2_5", rank:"Platino", req:15000,
+      branches:[{name:"Rama A",qv:13000},{name:"Rama B",qv:5000}],
+      options:["Sí califica por QV","No califica por QV","Falta directos"], correct:"No califica por QV",
+      explain:"Tope=9,000. QV válido=9,000+5,000=14,000 (<15,000)."},
+    {id:"q2_6", rank:"Diamante Azul", req:50000,
+      branches:[{name:"Rama A",qv:30000},{name:"Rama B",qv:21000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo con 3 ramas"], correct:"Sí califica por QV",
+      explain:"Tope=30,000. QV válido=30,000+21,000=51,000 (>=50,000)."},
+    {id:"q2_7", rank:"Diamante Negro", req:75000,
+      branches:[{name:"Rama A",qv:60000},{name:"Rama B",qv:25000}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=45,000. QV válido=45,000+25,000=70,000 (<75,000)."},
+    {id:"q2_8", rank:"Diamante Negro", req:75000,
+      branches:[{name:"Rama A",qv:45000},{name:"Rama B",qv:31000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo si sube Rama A"], correct:"Sí califica por QV",
+      explain:"Tope=45,000. QV válido=45,000+31,000=76,000 (>=75,000)."},
+    {id:"q2_9", rank:"Doble Diamante", req:125000,
+      branches:[{name:"Rama A",qv:95000},{name:"Rama B",qv:42000}],
+      options:["Sí califica por QV","No califica por QV","Falta info"], correct:"No califica por QV",
+      explain:"Tope=75,000. QV válido=75,000+42,000=117,000 (<125,000)."},
+    {id:"q2_10", rank:"Doble Diamante Azul", req:175000,
+      branches:[{name:"Rama A",qv:105000},{name:"Rama B",qv:72000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo con 3 ramas"], correct:"Sí califica por QV",
+      explain:"Tope=105,000. QV válido=105,000+72,000=177,000 (>=175,000)."},
+    {id:"q2_11", rank:"Doble Diamante Negro", req:225000,
+      branches:[{name:"Rama A",qv:160000},{name:"Rama B",qv:85000}],
+      options:["Sí califica por QV","No califica por QV","Falta directos"], correct:"No califica por QV",
+      explain:"Tope=135,000. QV válido=135,000+85,000=220,000 (<225,000)."},
+    {id:"q2_12", rank:"Doble Diamante Negro", req:225000,
+      branches:[{name:"Rama A",qv:135000},{name:"Rama B",qv:92000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo con 3 ramas"], correct:"Sí califica por QV",
+      explain:"Tope=135,000. QV válido=135,000+92,000=227,000 (>=225,000)."},
+    {id:"q2_13", rank:"Triple Diamante", req:300000,
+      branches:[{name:"Rama A",qv:220000},{name:"Rama B",qv:105000}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=180,000. QV válido=180,000+105,000=285,000 (<300,000)."},
+    {id:"q2_14", rank:"Triple Diamante", req:300000,
+      branches:[{name:"Rama A",qv:180000},{name:"Rama B",qv:130000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo si baja Rama B"], correct:"Sí califica por QV",
+      explain:"Tope=180,000. QV válido=180,000+130,000=310,000 (>=300,000)."},
+    {id:"q2_15", rank:"Triple Diamante Negro", req:500000,
+      branches:[{name:"Rama A",qv:360000},{name:"Rama B",qv:180000}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=300,000. QV válido=300,000+180,000=480,000 (<500,000)."},
+  ];
+
+  const BANK_QUAL_3 = [
+    {id:"q3_1", rank:"Diamante", req:25000,
+      branches:[{name:"Patricio Angulo",qv:23000},{name:"Alba Sánchez",qv:1500},{name:"Juan Pérez",qv:1000}],
+      options:["Sí califica por QV","No califica por QV","Falta info"], correct:"No califica por QV",
+      explain:"Tope=15,000. QV válido=15,000+1,500+1,000=17,500 (<25,000)."},
+    {id:"q3_2", rank:"Diamante Azul", req:50000,
+      branches:[{name:"Rama A",qv:35000},{name:"Rama B",qv:14000},{name:"Rama C",qv:5000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo si sube Rama B"], correct:"No califica por QV",
+      explain:"Tope=30,000. QV válido=30,000+14,000+5,000=49,000 (<50,000)."},
+    {id:"q3_3", rank:"Plata", req:3000,
+      branches:[{name:"Rama A",qv:2500},{name:"Rama B",qv:600},{name:"Rama C",qv:400}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=1,800. QV válido=1,800+600+400=2,800 (<3,000)."},
+    {id:"q3_4", rank:"Oro", req:5000,
+      branches:[{name:"Rama A",qv:3800},{name:"Rama B",qv:900},{name:"Rama C",qv:700}],
+      options:["Sí califica por QV","No califica por QV","Falta info"], correct:"No califica por QV",
+      explain:"Tope=3,000. QV válido=3,000+900+700=4,600 (<5,000)."},
+    {id:"q3_5", rank:"Platino", req:15000,
+      branches:[{name:"Rama A",qv:9000},{name:"Rama B",qv:4200},{name:"Rama C",qv:2100}],
+      options:["Sí califica por QV","No califica por QV","Califica solo con 2 ramas"], correct:"Sí califica por QV",
+      explain:"Tope=9,000. QV válido=9,000+4,200+2,100=15,300 (>=15,000)."},
+  ];
+
+  const BANK_QUAL_4 = [
+    {id:"q4_1", rank:"Diamante Azul", req:50000,
+      branches:[{name:"Rama A",qv:33000},{name:"Rama B",qv:9000},{name:"Rama C",qv:6000},{name:"Rama D",qv:4000}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=30,000. QV válido=30,000+9,000+6,000+4,000=49,000 (<50,000)."},
+    {id:"q4_2", rank:"Diamante", req:25000,
+      branches:[{name:"Rama A",qv:19000},{name:"Rama B",qv:3000},{name:"Rama C",qv:2000},{name:"Rama D",qv:800}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=15,000. QV válido=15,000+3,000+2,000+800=20,800 (<25,000)."},
+    {id:"q4_3", rank:"Doble Diamante", req:125000,
+      branches:[{name:"Rama A",qv:88000},{name:"Rama B",qv:26000},{name:"Rama C",qv:15000},{name:"Rama D",qv:8000}],
+      options:["Sí califica por QV","No califica por QV","Falta info"], correct:"No califica por QV",
+      explain:"Tope=75,000. QV válido=75,000+26,000+15,000+8,000=124,000 (<125,000)."},
+    {id:"q4_4", rank:"Triple Diamante", req:300000,
+      branches:[{name:"Rama A",qv:210000},{name:"Rama B",qv:60000},{name:"Rama C",qv:25000},{name:"Rama D",qv:15000}],
+      options:["Sí califica por QV","No califica por QV","Empate"], correct:"No califica por QV",
+      explain:"Tope=180,000. QV válido=180,000+60,000+25,000+15,000=280,000 (<300,000)."},
+    {id:"q4_5", rank:"Triple Diamante Azul", req:400000,
+      branches:[{name:"Rama A",qv:260000},{name:"Rama B",qv:90000},{name:"Rama C",qv:40000},{name:"Rama D",qv:15000}],
+      options:["Sí califica por QV","No califica por QV","Califica solo con 2 ramas"], correct:"No califica por QV",
+      explain:"Tope=240,000. QV válido=240,000+90,000+40,000+15,000=385,000 (<400,000)."},
+  ];
+
+  let currentMax = [];
+  let currentQual = [];
+
+  function renderMax(q, idx){
+    const card = document.createElement("div");
+    card.className = "q";
+    card.innerHTML = `
+      <div class="q-title">P${idx+1}. Para el rango <b>${q.rank}</b> que requiere <b>${fmt(q.req)} QV</b>, ¿cuál es el <b>máximo permitido</b> en una sola pierna (regla 60%)?</div>
+      <div class="q-desc">Selecciona la respuesta correcta.</div>
+      <div class="opts">
+        ${q.options.map(opt => `
+          <label class="opt">
+            <input type="radio" name="${q.id}" value="${opt}">
+            ${fmt(opt)} QV
+          </label>
+        `).join("")}
+      </div>
+      <div class="fb" id="fb-${q.id}"></div>
+    `;
+    return card;
+  }
+
+  function renderQual(q, idx){
+    const lines = q.branches.map(b => `• ${b.name}: <b>${fmt(b.qv)} QV</b>`).join("<br>");
+    const card = document.createElement("div");
+    card.className = "q";
+    card.innerHTML = `
+      <div class="q-title">P${idx+6}. Objetivo: <b>${q.rank}</b> (${fmt(q.req)} QV). Con el siguiente volumen por ramas, aplicando la regla del 60%, ¿<b>califica por QV</b>?</div>
+      <div class="q-desc">${lines}</div>
+      <div class="opts">
+        ${q.options.map(opt => `
+          <label class="opt">
+            <input type="radio" name="${q.id}" value="${opt}">
+            ${opt}
+          </label>
+        `).join("")}
+      </div>
+      <div class="fb" id="fb-${q.id}"></div>
+    `;
+    return card;
+  }
+
+  function render(){
+    const secMax = document.getElementById("secMax");
+    const secQual = document.getElementById("secQual");
+    secMax.innerHTML = "";
+    secQual.innerHTML = "";
+    document.getElementById("score").textContent = "";
+
+    currentMax = pickN(BANK_MAX, 5);
+
+    const pick2 = pickN(BANK_QUAL_2, 3);
+    const pick3 = pickN(BANK_QUAL_3, 1);
+    const pick4 = pickN(BANK_QUAL_4, 1);
+    currentQual = shuffle([...pick2, ...pick3, ...pick4]);
+
+    currentMax.forEach((q, i) => secMax.appendChild(renderMax(q, i)));
+    currentQual.forEach((q, i) => secQual.appendChild(renderQual(q, i)));
+  }
+
+  function check(){
+    let ok = 0;
+    let total = 0;
+
+    function checkOne(q){
+      total++;
+      const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+      const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+      const fb = document.getElementById(`fb-${q.id}`);
+
+      inputs.forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+
+      if(!picked){
+        fb.className = "fb bad";
+        fb.textContent = "Elige una opción.";
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const lab = inp.closest(".opt");
+        const isCorrect = String(inp.value) === String(q.correct);
+        if(isCorrect) lab.classList.add("correct");
+        if(inp.checked && !isCorrect) lab.classList.add("wrong");
+      });
+
+      const isOk = String(picked.value) === String(q.correct);
+      if(isOk){
+        ok++;
+        fb.className = "fb ok";
+        fb.textContent = "Correcto ✅";
+      } else {
+        fb.className = "fb bad";
+        fb.textContent = `Incorrecto ❌  ${q.explain}`;
+      }
+    }
+
+    currentMax.forEach(checkOne);
+    currentQual.forEach(checkOne);
+
+    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+  }
+
+  function reset(){
+    [...currentMax, ...currentQual].forEach(q=>{
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+      const fb = document.getElementById(`fb-${q.id}`);
+      if(fb){ fb.className="fb"; fb.textContent=""; }
+    });
+    document.getElementById("score").textContent = "";
+  }
+
+  document.getElementById("btnNew").addEventListener("click", render);
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnReset").addEventListener("click", reset);
+
+  render();
+</script>
+</body>
+</html>
