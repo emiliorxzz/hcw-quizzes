@@ -28,17 +28,6 @@
     .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
     .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
     .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
-    .mini{
-      display:inline-block;
-      font-weight:900;
-      font-size:12px;
-      padding:2px 10px;
-      border-radius:999px;
-      background:#fff;
-      border:1px solid #ffd3b7;
-      margin-top:8px;
-      color:#222;
-    }
     .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
     .opt input{margin-right:10px;transform:translateY(1px)}
     .opt.correct{border-color:var(--ok);background:#e9f7ee}
@@ -130,13 +119,13 @@
   <div class="wrap">
     <div class="top">
       <h1>Quiz Bono Fundador</h1>
-      <p class="sub">Cada intento genera <b>10 preguntas</b>. Calcula el pago estimado del Bono Fundador.</p>
+      <p class="sub">Cada intento genera <b>10 preguntas</b>. Resuelve como si estuvieras cerrando el año.</p>
       <p class="rule">
         Regla práctica (para este quiz):<br>
         • Fondo Fundador = <code>1% de ventas globales</code><br>
-        • Si NO calificas Platino o superior (o tienes 0 periodos) → <b>pago 0</b><br>
+        • Solo aplica si calificaste como <b>Platino o superior</b> en el periodo (y tienes periodos válidos).<br>
         • Pago estimado = <code>Fondo × (tus periodos / total periodos elegibles)</code>
-        <div class="pill">Tip: primero confirma si aplica, luego calcula proporción.</div>
+        <div class="pill">Tip: primero valida si aplica. Luego calcula proporción.</div>
       </p>
     </div>
 
@@ -173,56 +162,68 @@
   const usd = (n) => `${to2(n)} USD`;
   const fmtInt = (n) => Number(n).toLocaleString("en-US");
 
+  function calcFund(sales){ return sales * 0.01; }
+
   function calcPay(sales, eligible, yourPeriods, totalPeriods){
-    const fund = sales * 0.01;
-    if(!eligible || yourPeriods <= 0 || totalPeriods <= 0) return {pay:0, fund, share:0};
+    const fund = calcFund(sales);
+    if(!eligible || yourPeriods <= 0 || totalPeriods <= 0) return {pay:0, fund, share:0, applies:false};
     const share = yourPeriods / totalPeriods;
-    const pay = fund * share;
-    return {pay, fund, share};
+    return {pay: fund * share, fund, share, applies:true};
   }
 
-  function make3Options(correct){
-    const c = Number(correct);
-    const w1 = c * 0.85;
-    const w2 = c * 1.15;
-    let opts = [c, w1, w2].map(v => Number(to2(v)));
-    if(new Set(opts).size < 3){
-      opts = [c, c*0.9, c*1.1].map(v => Number(to2(v)));
+  function make3Options(correctPay, applies){
+    // Si NO aplica: correcta es "No aplica (pago $0)" pero distractores son montos reales para confundir
+    if(!applies){
+      const correct = "No aplica (pago $0)";
+      const w1 = usd(1200);
+      const w2 = usd(4800);
+      const opts = shuffle([correct, w1, w2]).map(t => ({
+        label: t,
+        value: t,
+        isCorrect: t === correct
+      }));
+      return {options: opts, correctValue: correct};
     }
-    return shuffle(opts).map(v => ({
+
+    // Si aplica: 3 montos en USD (correcto + 2 distractores)
+    const c = Number(correctPay);
+    const wrong1 = c * 0.85; // error típico
+    const wrong2 = c * 1.15; // error típico
+    let vals = [c, wrong1, wrong2].map(v => Number(to2(v)));
+    if(new Set(vals).size < 3){
+      vals = [c, c*0.9, c*1.1].map(v => Number(to2(v)));
+    }
+    const opts = shuffle(vals).map(v => ({
       label: usd(v),
       value: String(to2(v)),
       isCorrect: Math.abs(v - Number(to2(c))) < 0.001
     }));
+    return {options: opts, correctValue: String(to2(c))};
   }
 
-  // Banco de escenarios (25) — se toman 10 por intento
+  // Escenarios: (ventas, califica Platino+, tus periodos, total periodos elegibles)
+  // Incluye casos no aplica (eligible=false o your=0) pero sin opción "0 USD" literal.
   const BANK = [
-    {id:"f1",  sales:8000000, eligible:true,  your:12, total:100},
-    {id:"f2",  sales:5000000, eligible:true,  your:8,  total:80},
-    {id:"f3",  sales:12000000,eligible:true,  your:20, total:160},
-    {id:"f4",  sales:3000000, eligible:true,  your:5,  total:50},
-    {id:"f5",  sales:9500000, eligible:true,  your:15, total:120},
-    {id:"f6",  sales:8000000, eligible:false, your:12, total:100},
-    {id:"f7",  sales:8000000, eligible:true,  your:0,  total:100},
-    {id:"f8",  sales:4200000, eligible:true,  your:10, total:90},
-    {id:"f9",  sales:6100000, eligible:true,  your:6,  total:75},
-    {id:"f10", sales:15000000,eligible:true,  your:18, total:200},
-    {id:"f11", sales:2600000, eligible:true,  your:4,  total:60},
-    {id:"f12", sales:7000000, eligible:true,  your:14, total:140},
-    {id:"f13", sales:11000000,eligible:true,  your:22, total:180},
-    {id:"f14", sales:4800000, eligible:true,  your:9,  total:90},
-    {id:"f15", sales:10000000,eligible:true,  your:16, total:160},
-    {id:"f16", sales:5300000, eligible:false, your:7,  total:70},
-    {id:"f17", sales:9000000, eligible:true,  your:11, total:110},
-    {id:"f18", sales:6400000, eligible:true,  your:8,  total:100},
-    {id:"f19", sales:7200000, eligible:true,  your:6,  total:120},
-    {id:"f20", sales:8500000, eligible:true,  your:17, total:170},
-    {id:"f21", sales:2000000, eligible:true,  your:3,  total:60},
-    {id:"f22", sales:4000000, eligible:true,  your:6,  total:80},
-    {id:"f23", sales:6000000, eligible:true,  your:12, total:150},
-    {id:"f24", sales:13000000,eligible:true,  your:25, total:250},
-    {id:"f25", sales:7500000, eligible:true,  your:10, total:125},
+    {id:"s1",  sales:8000000,  eligible:true,  your:12, total:100},
+    {id:"s2",  sales:5000000,  eligible:true,  your:8,  total:80},
+    {id:"s3",  sales:12000000, eligible:true,  your:20, total:160},
+    {id:"s4",  sales:3000000,  eligible:true,  your:5,  total:50},
+    {id:"s5",  sales:9500000,  eligible:true,  your:15, total:120},
+    {id:"s6",  sales:7000000,  eligible:true,  your:14, total:140},
+    {id:"s7",  sales:11000000, eligible:true,  your:22, total:180},
+    {id:"s8",  sales:4800000,  eligible:true,  your:9,  total:90},
+    {id:"s9",  sales:10000000, eligible:true,  your:16, total:160},
+    {id:"s10", sales:6400000,  eligible:true,  your:8,  total:100},
+    {id:"s11", sales:9000000,  eligible:true,  your:11, total:110},
+    {id:"s12", sales:4000000,  eligible:true,  your:6,  total:80},
+    {id:"s13", sales:7500000,  eligible:true,  your:10, total:125},
+
+    // no aplica
+    {id:"n1",  sales:8000000,  eligible:false, your:12, total:100},
+    {id:"n2",  sales:5300000,  eligible:false, your:7,  total:70},
+    {id:"n3",  sales:8000000,  eligible:true,  your:0,  total:100},
+    {id:"n4",  sales:2000000,  eligible:true,  your:0,  total:60},
+    {id:"n5",  sales:6000000,  eligible:true,  your:12, total:0},
   ];
 
   let current = [];
@@ -233,28 +234,33 @@
     document.getElementById("score").textContent = "—";
 
     current = pickN(BANK, 10).map(item => {
-      const {pay, fund, share} = calcPay(item.sales, item.eligible, item.your, item.total);
-      const correctValue = String(to2(pay));
-      const options = make3Options(pay);
-      const eligTxt = item.eligible ? "Sí" : "No";
+      const {pay, fund, share, applies} = calcPay(item.sales, item.eligible, item.your, item.total);
+
+      // opciones
+      const {options, correctValue} = make3Options(pay, applies);
+
+      // enunciado más desglosado (sin responderse solo)
+      const question =
+        `Ventas globales del año: $${fmtInt(item.sales)}. ` +
+        `¿Calificaste como Platino o superior en el periodo?: ${item.eligible ? "Sí" : "No"}. ` +
+        `Tus periodos calificados (Platino+): ${item.your}. ` +
+        `Total de periodos calificados (fundadores elegibles): ${item.total}. ` +
+        `¿Cuál es el resultado correcto para este escenario?`;
+
+      // explicación (solo al revisar)
       const explain =
         `Fondo = 1% de $${fmtInt(item.sales)} = ${usd(fund)}. ` +
-        (pay === 0
-          ? `No aplica → pago ${usd(0)}.`
-          : `Proporción = ${item.your}/${item.total} = ${(share*100).toFixed(2)}%. Pago = ${usd(pay)}.`
+        (applies
+          ? `Proporción = ${item.your}/${item.total} = ${(share*100).toFixed(2)}%. Pago = ${usd(pay)}.`
+          : `No aplica (no calificó Platino+ o no tiene periodos válidos) → pago $0.`
         );
 
       return {
-        id: item.id,
-        sales: item.sales,
-        eligible: item.eligible,
-        your: item.your,
-        total: item.total,
-        eligTxt,
-        correctValue,
-        correct: pay,
+        id:item.id,
+        question,
+        explain,
         options,
-        explain
+        correctValue
       };
     });
 
@@ -262,8 +268,8 @@
       const card = document.createElement("div");
       card.className = "q";
       card.innerHTML = `
-        <div class="q-title">P${i+1}. Ventas globales del año: $${fmtInt(q.sales)}. ¿Calificaste Platino o superior?: <b>${q.eligTxt}</b>. Tus periodos Platino+: <b>${q.your}</b>. Total periodos elegibles: <b>${q.total}</b>. ¿Cuál es tu pago estimado?</div>
-        <div class="q-desc">Selecciona la respuesta correcta.</div>
+        <div class="q-title">P${i+1}. ${q.question}</div>
+        <div class="q-desc">Selecciona una respuesta.</div>
         <div class="opts">
           ${q.options.map(opt => `
             <label class="opt">
