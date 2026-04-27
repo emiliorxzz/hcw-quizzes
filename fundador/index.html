@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Bono Fundador — HC Wellness</title>
+  <style>
+    :root{
+      --hc-orange:#de7319;
+      --hc-orange-dark:#a3441f;
+      --ok:#0a7a2f;
+      --bad:#b00020;
+      --ink:#111;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f6f5f2;
+      --line:#e6e6e6;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04);}
+    h1{margin:0 0 6px;font-size:22px;text-align:center;color:var(--hc-orange-dark)}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
+    .rule{margin:0;padding:12px 14px;border-radius:14px;background:#fff3ea;border:1px solid #ffd3b7;font-weight:800;line-height:1.35}
+    code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid #ffd3b7;background:#fff;font-size:12px;color:#222;font-weight:900;margin-top:8px}
+
+    .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
+    .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
+    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
+    .opt input{margin-right:10px;transform:translateY(1px)}
+    .opt.correct{border-color:var(--ok);background:#e9f7ee}
+    .opt.wrong{border-color:var(--bad);background:#fdecee}
+    .fb{margin-top:8px;font-weight:900}
+    .fb.ok{color:var(--ok)}
+    .fb.bad{color:var(--bad)}
+
+    .controls{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      margin:18px 0 26px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
+    .btn-primary{background:var(--hc-orange);color:#fff}
+    .btn-primary:hover{background:var(--hc-orange-dark)}
+    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
+    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Quiz Bono Fundador</h1>
+      <p class="sub">Ahora te toca a ti. 🔥 Calcula el Bono Fundador como si estuvieras cerrando el año.</p>
+      <p class="rule">
+        Regla del plan: <b>1% de las ventas globales</b> se asigna al Bono Fundador y se divide entre fundadores que califican <b>Platino o superior</b>. Se paga <b>anual</b> en el último mes del año. <br>
+        <span class="pill">En este quiz (práctica): asumimos reparto proporcional a “periodos calificados”.</span>
+      </p>
+    </div>
+
+    <div id="quiz"></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
+      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
+      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz — Bono Fundador</div>
+  </div>
+
+<script>
+  const fmtUsd = (n) => Number(n).toFixed(2).replace(/\.00$/,'');
+  const fmtInt = (n) => Number(n).toLocaleString("en-US");
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  };
+  const pickN = (arr,n) => shuffle(arr).slice(0,n);
+
+  const optText = (usd) => `Pago estimado: $${fmtUsd(usd)} USD`;
+
+  function buildOptions(correct){
+    const w1 = correct * 2;
+    const w2 = Math.max(0, correct - (correct*0.25));
+    const w3 = correct + (correct*0.10);
+    return shuffle([correct, w1, w2, w3]).map(v => optText(v));
+  }
+
+  // Escenarios (25): en todos calculan:
+  // Fondo = ventas × 1%
+  // Si NO es Platino+ o periodos=0 → pago = 0
+  // Si sí: pago = fondo × (tusPeriodos / totalPeriodosElegibles)
+  const BANK = [
+    {id:"f1",  sales:8000000, eligible:true,  yourPeriods:12, totalPeriods:100},
+    {id:"f2",  sales:5000000, eligible:true,  yourPeriods:8,  totalPeriods:80},
+    {id:"f3",  sales:12000000,eligible:true,  yourPeriods:20, totalPeriods:160},
+    {id:"f4",  sales:3000000, eligible:true,  yourPeriods:5,  totalPeriods:50},
+    {id:"f5",  sales:9500000, eligible:true,  yourPeriods:15, totalPeriods:120},
+
+    {id:"f6",  sales:8000000, eligible:false, yourPeriods:12, totalPeriods:100}, // no califica platino+
+    {id:"f7",  sales:8000000, eligible:true,  yourPeriods:0,  totalPeriods:100}, // no calificó periodos
+    {id:"f8",  sales:4200000, eligible:true,  yourPeriods:10, totalPeriods:90},
+    {id:"f9",  sales:6100000, eligible:true,  yourPeriods:6,  totalPeriods:75},
+    {id:"f10", sales:15000000,eligible:true,  yourPeriods:18, totalPeriods:200},
+
+    {id:"f11", sales:2600000, eligible:true,  yourPeriods:4,  totalPeriods:60},
+    {id:"f12", sales:7000000, eligible:true,  yourPeriods:14, totalPeriods:140},
+    {id:"f13", sales:11000000,eligible:true,  yourPeriods:22, totalPeriods:180},
+    {id:"f14", sales:4800000, eligible:true,  yourPeriods:9,  totalPeriods:90},
+    {id:"f15", sales:10000000,eligible:true,  yourPeriods:16, totalPeriods:160},
+
+    {id:"f16", sales:5300000, eligible:false, yourPeriods:7,  totalPeriods:70},
+    {id:"f17", sales:9000000, eligible:true,  yourPeriods:11, totalPeriods:110},
+    {id:"f18", sales:6400000, eligible:true,  yourPeriods:8,  totalPeriods:100},
+    {id:"f19", sales:7200000, eligible:true,  yourPeriods:6,  totalPeriods:120},
+    {id:"f20", sales:8500000, eligible:true,  yourPeriods:17, totalPeriods:170},
+
+    {id:"f21", sales:2000000, eligible:true,  yourPeriods:3,  totalPeriods:60},
+    {id:"f22", sales:4000000, eligible:true,  yourPeriods:6,  totalPeriods:80},
+    {id:"f23", sales:6000000, eligible:true,  yourPeriods:12, totalPeriods:150},
+    {id:"f24", sales:13000000,eligible:true,  yourPeriods:25, totalPeriods:250},
+    {id:"f25", sales:7500000, eligible:true,  yourPeriods:10, totalPeriods:125},
+  ];
+
+  function compute(q){
+    const fund = q.sales * 0.01;
+    if(!q.eligible || q.yourPeriods <= 0 || q.totalPeriods <= 0){
+      return {
+        pay: 0,
+        explain: `Fondo = ${fmtInt(q.sales)}×1% = $${fmtUsd(fund)}. No aplica (no califica Platino+ o 0 periodos) → pago $0.00.`
+      };
+    }
+    const share = q.yourPeriods / q.totalPeriods;
+    const pay = fund * share;
+    return {
+      pay,
+      explain: `Fondo = ${fmtInt(q.sales)}×1% = $${fmtUsd(fund)}. Proporción = ${q.yourPeriods}/${q.totalPeriods} = ${(share*100).toFixed(2)}%. Pago = $${fmtUsd(pay)}.`
+    };
+  }
+
+  let current = [];
+
+  function render(){
+    const host = document.getElementById("quiz");
+    host.innerHTML = "";
+    document.getElementById("score").textContent = "";
+
+    current = pickN(BANK, 10).map(x => ({...x}));
+
+    current.forEach((q, i) => {
+      const {pay, explain} = compute(q);
+      q._correctText = optText(pay);
+      q._explain = explain;
+
+      const options = buildOptions(pay);
+
+      const eligTxt = q.eligible ? "Sí (Platino o superior)" : "No (abajo de Platino)";
+      const card = document.createElement("div");
+      card.className = "q";
+      card.innerHTML = `
+        <div class="q-title">P${i+1}. Cálculo Bono Fundador (práctica)</div>
+        <div class="q-desc">
+          Ventas globales del año: <b>$${fmtInt(q.sales)} USD</b><br>
+          ¿Eres fundador y calificaste Platino o superior en el periodo?: <b>${eligTxt}</b><br>
+          Tus periodos calificados (Platino+): <b>${q.yourPeriods}</b><br>
+          Total periodos calificados (todos los fundadores elegibles): <b>${q.totalPeriods}</b><br>
+          Pregunta: ¿Cuál es tu <b>pago estimado</b> del Bono Fundador?
+        </div>
+        <div class="opts">
+          ${options.map(o=>`
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${o}">
+              ${o}
+            </label>
+          `).join("")}
+        </div>
+        <div class="fb" id="fb-${q.id}"></div>
+      `;
+      host.appendChild(card);
+    });
+  }
+
+  function check(){
+    let ok = 0;
+    let total = 0;
+
+    current.forEach(q=>{
+      total++;
+      const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+      const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+      const fb = document.getElementById(`fb-${q.id}`);
+
+      inputs.forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+
+      if(!picked){
+        fb.className = "fb bad";
+        fb.textContent = "Elige una opción.";
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const lab = inp.closest(".opt");
+        const isCorrect = (inp.value === q._correctText);
+        if(isCorrect) lab.classList.add("correct");
+        if(inp.checked && !isCorrect) lab.classList.add("wrong");
+      });
+
+      const isOk = (picked.value === q._correctText);
+      if(isOk){
+        ok++;
+        fb.className = "fb ok";
+        fb.textContent = "Correcto ✅";
+      } else {
+        fb.className = "fb bad";
+        fb.textContent = `Incorrecto ❌  ${q._explain}`;
+      }
+    });
+
+    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+  }
+
+  function reset(){
+    current.forEach(q=>{
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+      const fb = document.getElementById(`fb-${q.id}`);
+      if(fb){ fb.className="fb"; fb.textContent=""; }
+    });
+    document.getElementById("score").textContent = "";
+  }
+
+  document.getElementById("btnNew").addEventListener("click", render);
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnReset").addEventListener("click", reset);
+
+  render();
+</script>
+</body>
+</html>
