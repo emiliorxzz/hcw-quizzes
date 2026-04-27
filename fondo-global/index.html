@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Quiz Bono de Igualación — HC Wellness</title>
+  <title>Quiz Fondo Global — HC Wellness</title>
   <style>
     :root{
       --hc-orange:#de7319;
@@ -129,13 +129,14 @@
 
   <div class="wrap">
     <div class="top">
-      <h1>Quiz Bono de Igualación</h1>
-      <p class="sub">Cada intento genera <b>10 preguntas</b>. Calcula la <b>igualación total</b> con base en tu rango.</p>
+      <h1>Quiz Fondo Global</h1>
+      <p class="sub">Cada intento genera <b>10 preguntas</b>. Calcula tu pago con acciones.</p>
       <p class="rule">
-        Porcentajes por nivel:<br>
-        • Nivel 1: <code>25%</code> • Nivel 2: <code>20%</code> • Nivel 3: <code>10%</code> • Nivel 4: <code>5%</code> • Nivel 5: <code>5%</code><br>
-        Desbloqueo por rango: Ejecutivo (N1), Bronce (N1+N2), Plata (N1+N2+N3), Oro (+N4), Platino (+N5).<br>
-        <span class="pill">Tip: igualación total = suma de cada nivel desbloqueado.</span>
+        Regla práctica:<br>
+        • Fondo Global = <code>7% de ventas globales</code><br>
+        • Valor por acción = <code>Fondo / total de acciones calificadas</code><br>
+        • Pago = <code>(tus acciones) × (valor por acción)</code>
+        <div class="pill">Tip: Primero identifica cuántas acciones te tocan por rango.</div>
       </p>
     </div>
 
@@ -154,7 +155,7 @@
       <p class="score" id="score">—</p>
     </div>
 
-    <div class="foot">HC Wellness Zone • Quiz Igualación</div>
+    <div class="foot">HC Wellness Zone • Quiz Fondo Global</div>
   </div>
 
 <script>
@@ -170,73 +171,41 @@
 
   const to2 = (n) => (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
   const usd = (n) => `${to2(n)} USD`;
+  const fmtInt = (n) => Number(n).toLocaleString("en-US");
 
-  const LEVEL_RATE = {1:0.25, 2:0.20, 3:0.10, 4:0.05, 5:0.05};
-  const RANK_MAX_LEVEL = {
-    "Ejecutivo": 1,
-    "Bronce": 2,
-    "Plata": 3,
-    "Oro": 4,
-    "Platino": 5
+  // Acciones por rango (según tabla)
+  const ACTIONS = {
+    "Bronce":1,
+    "Plata":2,
+    "Oro":3,
+    "Platino":4,
+    "Diamante":5,
+    "Diamante Azul":6,
+    "Diamante Negro":7,
+    "Doble Diamante":8,
+    "Doble Diamante Azul":9,
+    "Doble Diamante Negro":10,
+    "Triple Diamante":11,
+    "Triple Diamante Azul":12,
+    "Triple Diamante Negro":13
   };
 
-  function calcTotal(rank, lv){
-    const maxL = RANK_MAX_LEVEL[rank] || 0;
-    let total = 0;
-    for(let l=1;l<=5;l++){
-      const base = (lv[l]?.bin || 0) + (lv[l]?.uni || 0);
-      if(l <= maxL){
-        total += base * (LEVEL_RATE[l] || 0);
-      }
-    }
-    return total;
+  function calcTypeA(rank, actionValue){
+    const actions = ACTIONS[rank];
+    return actions * actionValue;
   }
 
-  function explain(rank, lv){
-    const maxL = RANK_MAX_LEVEL[rank] || 0;
-    let parts = [];
-    for(let l=1;l<=5;l++){
-      const bin = lv[l]?.bin || 0;
-      const uni = lv[l]?.uni || 0;
-      const base = bin + uni;
-      if(l <= maxL){
-        parts.push(`N${l}: (${bin}+${uni})×${Math.round(LEVEL_RATE[l]*100)}%`);
-      } else if(base>0){
-        parts.push(`N${l}: (${bin}+${uni}) no aplica`);
-      }
-    }
-    return parts.join(" | ");
+  function calcTypeB(rank, globalSales, totalActions){
+    const fund = globalSales * 0.07;
+    const actionValue = fund / totalActions;
+    const actions = ACTIONS[rank];
+    return {pay: actions * actionValue, fund, actionValue, actions};
   }
-
-  // Banco de 20 escenarios (rotan 10 por intento).
-  // Cada escenario: rank + comisiones por nivel (bin+uni).
-  const BANK = [
-    {id:"i1",  rank:"Ejecutivo", lv:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
-    {id:"i2",  rank:"Bronce",    lv:{1:{bin:250,uni:0},2:{bin:150,uni:30},3:{bin:200,uni:20}}},
-    {id:"i3",  rank:"Plata",     lv:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
-    {id:"i4",  rank:"Oro",       lv:{1:{bin:300,uni:50},2:{bin:180,uni:20},3:{bin:300,uni:30},4:{bin:600,uni:75}}},
-    {id:"i5",  rank:"Platino",   lv:{1:{bin:500,uni:0},2:{bin:250,uni:100},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:1000,uni:120}}},
-    {id:"i6",  rank:"Plata",     lv:{1:{bin:90,uni:10},2:{bin:150,uni:75},3:{bin:0,uni:120},4:{bin:500,uni:50}}},
-    {id:"i7",  rank:"Bronce",    lv:{1:{bin:100,uni:25},2:{bin:60,uni:56.25},3:{bin:400,uni:40}}},
-    {id:"i8",  rank:"Ejecutivo", lv:{1:{bin:67.5,uni:11.25},2:{bin:60,uni:56.25}}},
-    {id:"i9",  rank:"Oro",       lv:{1:{bin:150,uni:0},2:{bin:120,uni:30},3:{bin:0,uni:120},4:{bin:600,uni:0},5:{bin:900,uni:100}}},
-    {id:"i10", rank:"Platino",   lv:{1:{bin:300,uni:30},2:{bin:180,uni:20},3:{bin:300,uni:40},4:{bin:600,uni:75},5:{bin:1000,uni:120}}},
-    {id:"i11", rank:"Ejecutivo", lv:{1:{bin:1000,uni:100},2:{bin:500,uni:0}}},
-    {id:"i12", rank:"Bronce",    lv:{1:{bin:200,uni:0},2:{bin:0,uni:200},4:{bin:600,uni:60}}},
-    {id:"i13", rank:"Plata",     lv:{1:{bin:500,uni:50},2:{bin:0,uni:0},3:{bin:340,uni:0}}},
-    {id:"i14", rank:"Oro",       lv:{1:{bin:120,uni:30},2:{bin:300,uni:40},3:{bin:250,uni:100},4:{bin:700,uni:60}}},
-    {id:"i15", rank:"Platino",   lv:{1:{bin:0,uni:300},2:{bin:120,uni:30},3:{bin:300,uni:40},4:{bin:250,uni:0},5:{bin:1000,uni:0}}},
-    {id:"i16", rank:"Plata",     lv:{1:{bin:300,uni:0},2:{bin:150,uni:0},3:{bin:225,uni:225}}},
-    {id:"i17", rank:"Bronce",    lv:{1:{bin:250,uni:50},2:{bin:150,uni:30}}},
-    {id:"i18", rank:"Ejecutivo", lv:{1:{bin:0,uni:120},3:{bin:300,uni:40}}},
-    {id:"i19", rank:"Oro",       lv:{1:{bin:67.5,uni:11.25},2:{bin:60,uni:56.25},3:{bin:150,uni:75},4:{bin:250,uni:0}}},
-    {id:"i20", rank:"Platino",   lv:{1:{bin:100,uni:25},2:{bin:150,uni:75},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:0,uni:225}}},
-  ];
 
   function make3Options(correct){
     const c = Number(correct);
-    const w1 = c * 0.8;  // error: olvidan un nivel / % incorrecto
-    const w2 = c * 1.2;  // error: cuentan niveles no desbloqueados
+    const w1 = c * 0.85; // error: valor acción mal
+    const w2 = c * 1.15; // error: acciones mal
     let opts = [c, w1, w2].map(v => Number(to2(v)));
     if(new Set(opts).size < 3){
       opts = [c, c*0.9, c*1.1].map(v => Number(to2(v)));
@@ -248,35 +217,88 @@
     }));
   }
 
+  // Banco de preguntas: tipo A (ya te dan valor por acción 40–50) y tipo B (ventas + total acciones)
+  const BANK_A = [
+    {id:"a1", type:"A", rank:"Diamante", value:45},
+    {id:"a2", type:"A", rank:"Plata", value:40},
+    {id:"a3", type:"A", rank:"Doble Diamante", value:50},
+    {id:"a4", type:"A", rank:"Diamante Azul", value:42},
+    {id:"a5", type:"A", rank:"Oro", value:48},
+    {id:"a6", type:"A", rank:"Triple Diamante Negro", value:45},
+    {id:"a7", type:"A", rank:"Platino", value:50},
+    {id:"a8", type:"A", rank:"Diamante Negro", value:44},
+    {id:"a9", type:"A", rank:"Bronce", value:47},
+    {id:"a10", type:"A", rank:"Doble Diamante Azul", value:41},
+  ];
+
+  const BANK_B = [
+    {id:"b1", type:"B", rank:"Diamante", globalSales:500000, totalActions:800},
+    {id:"b2", type:"B", rank:"Plata", globalSales:300000, totalActions:500},
+    {id:"b3", type:"B", rank:"Oro", globalSales:800000, totalActions:1200},
+    {id:"b4", type:"B", rank:"Diamante Azul", globalSales:600000, totalActions:900},
+    {id:"b5", type:"B", rank:"Doble Diamante", globalSales:1000000, totalActions:1500},
+    {id:"b6", type:"B", rank:"Platino", globalSales:450000, totalActions:700},
+    {id:"b7", type:"B", rank:"Diamante Negro", globalSales:900000, totalActions:1400},
+    {id:"b8", type:"B", rank:"Triple Diamante", globalSales:1200000, totalActions:2000},
+    {id:"b9", type:"B", rank:"Bronce", globalSales:250000, totalActions:600},
+    {id:"b10", type:"B", rank:"Doble Diamante Azul", globalSales:700000, totalActions:1100},
+  ];
+
   let current = [];
+
+  function buildQuestion(item){
+    if(item.type === "A"){
+      const actions = ACTIONS[item.rank];
+      const correct = calcTypeA(item.rank, item.value);
+      const correctValue = String(to2(correct));
+      const options = make3Options(correct);
+
+      return {
+        id: item.id,
+        correct,
+        correctValue,
+        options,
+        text: `Tu rango es ${item.rank} (${actions} acciones). El valor por acción de este periodo es ${usd(item.value)}. ¿Cuál es tu pago del Fondo Global?`,
+        explain: `Pago = ${actions} × ${to2(item.value)} = ${usd(correct)}.`
+      };
+    } else {
+      const actions = ACTIONS[item.rank];
+      const {pay, fund, actionValue} = calcTypeB(item.rank, item.globalSales, item.totalActions);
+      const correct = pay;
+      const correctValue = String(to2(correct));
+      const options = make3Options(correct);
+
+      return {
+        id: item.id,
+        correct,
+        correctValue,
+        options,
+        text:
+          `Tu rango es ${item.rank} (${actions} acciones). Ventas globales: $${fmtInt(item.globalSales)}. `+
+          `Total de acciones calificadas: ${fmtInt(item.totalActions)}. ¿Cuál es tu pago del Fondo Global?`,
+        explain:
+          `Fondo = 7% de $${fmtInt(item.globalSales)} = ${usd(fund)}. `+
+          `Valor acción = ${usd(actionValue)}. `+
+          `Pago = ${actions} × ${to2(actionValue)} = ${usd(correct)}.`
+      };
+    }
+  }
 
   function render(){
     const host = document.getElementById("quiz");
     host.innerHTML = "";
     document.getElementById("score").textContent = "—";
 
-    current = pickN(BANK, 10).map(item => {
-      const correct = calcTotal(item.rank, item.lv);
-      const correctValue = String(to2(correct));
-      const options = make3Options(correct);
-      return {...item, correct, correctValue, options};
-    });
+    const pickA = pickN(BANK_A, 5);
+    const pickB = pickN(BANK_B, 5);
+    current = shuffle([...pickA, ...pickB]).map(buildQuestion);
 
     current.forEach((q, i) => {
-      const lines = [1,2,3,4,5].map(l=>{
-        const bin = q.lv[l]?.bin || 0;
-        const uni = q.lv[l]?.uni || 0;
-        return `• Nivel ${l}: Binario ${usd(bin)} + Uninivel ${usd(uni)}`;
-      }).join("<br>");
-
       const card = document.createElement("div");
       card.className = "q";
       card.innerHTML = `
-        <div class="q-title">P${i+1}. Tu rango es <b>${q.rank}</b>. Con la información de comisiones por niveles, ¿cuál es tu <b>igualación total</b> en USD?</div>
-        <div class="q-desc">
-          ${lines}<br>
-          <span class="mini">Recuerda: tu rango define hasta qué nivel cobras.</span>
-        </div>
+        <div class="q-title">P${i+1}. ${q.text}</div>
+        <div class="q-desc">Selecciona la respuesta correcta.</div>
         <div class="opts">
           ${q.options.map(opt => `
             <label class="opt">
@@ -322,7 +344,7 @@
         fb.textContent = "Correcto ✅";
       } else {
         fb.className = "fb bad";
-        fb.textContent = `Incorrecto ❌  ${explain(q.rank, q.lv)}. Total correcto: ${usd(Number(q.correctValue))}`;
+        fb.textContent = `Incorrecto ❌  ${q.explain}`;
       }
     });
 
