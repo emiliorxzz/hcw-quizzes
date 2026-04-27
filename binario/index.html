@@ -41,158 +41,201 @@
       border:1px solid var(--line);
       border-radius:18px;
       padding:14px;
-      margin:18px 0 26px;
+      margin:18px 0 14px;
+    }
+    .controls-row{
       display:flex;
+      justify-content:flex-end;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
     }
-    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
-    .btn-primary{background:var(--hc-orange);color:#fff}
-    .btn-primary:hover{background:var(--hc-orange-dark)}
-    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
-    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0;line-height:1}
+    .btn-review{
+      background:var(--hc-orange);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:16px;
+      font-size:16px;
+      box-shadow:0 10px 18px rgba(222,115,25,.25);
+    }
+    .btn-review:hover{background:var(--hc-orange-dark)}
+    .btn-white{
+      background:#fff;
+      color:var(--hc-orange-dark);
+      border:1px solid var(--hc-orange-dark);
+      padding:12px 14px;
+      border-radius:16px;
+      font-size:14px;
+    }
+    .btn-white:hover{
+      background:#fff7f1;
+      border-color:var(--hc-orange);
+      color:var(--hc-orange);
+    }
+
+    .score-wrap{
+      background:linear-gradient(90deg, #fff3ea, #ffffff);
+      border:1px solid #ffd3b7;
+      border-radius:18px;
+      padding:14px;
+      margin:12px 0 26px;
+      text-align:center;
+    }
+    .score-title{
+      font-weight:900;
+      color:var(--hc-orange-dark);
+      margin:0 0 6px;
+      font-size:16px;
+    }
+    .score{
+      font-weight:1000;
+      font-size:28px;
+      letter-spacing:.3px;
+      margin:0;
+    }
     .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+
+    .floating-back{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:9999;
+      background:#000;
+      color:#fff;
+      text-decoration:none;
+      font-weight:900;
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow:0 10px 20px rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.15);
+    }
+    .floating-back:hover{opacity:.92}
   </style>
 </head>
 <body>
+  <a class="floating-back" href="https://emiliorxzz-huyaz.wordpress.com/5-plan-de-compensacion/">Volver a HCW Zone</a>
+
   <div class="wrap">
     <div class="top">
       <h1>Quiz Bono Binario</h1>
-      <p class="sub">
-        Ahora te toca a ti. 🔥 Resuelve como si fuera tu semana real: calcula <b>binario</b> y <b>banco</b>.
-      </p>
+      <p class="sub">Cada intento genera <b>10 preguntas</b>. Responde y presiona <b>Revisar</b>.</p>
       <p class="rule">
-        Reglas del ejercicio:<br>
-        • Pago binario = <code>30% del CV de la pierna menor</code><br>
-        • Banco = <code>Excedente de CV</code> (pierna mayor − pierna menor)<br>
-        • Requisito: debe haber al menos <b>1 directo activo</b> en Construcción y al menos <b>1 directo activo</b> en Derrame.<br>
-        <span class="pill">Si no cumples activos en ambos lados: NO cobras y el banco se pierde ese periodo.</span>
+        Regla (resumen práctico):<br>
+        • Bono binario = <code>30% de la rama menor</code> (en CV aplicable).<br>
+        • Para cobrar, necesitas <b>directos activos en ambas ramas</b> (construcción y derrame).<br>
+        • Si no cumples directos activos en ambos lados, <b>no cobras</b> y el volumen del ejemplo <b>se pierde</b>.
+        <div class="pill">Tip: identifica rama menor, calcula 30% y define banco (carry) en la mayor.</div>
       </p>
     </div>
 
     <div id="quiz"></div>
 
     <div class="controls">
-      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
-      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
-      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
-      <div class="score" id="score"></div>
+      <div class="controls-row">
+        <button class="btn-review" id="btnCheck" type="button">Revisar</button>
+        <button class="btn-white" id="btnNew" type="button">Nueva versión</button>
+        <button class="btn-white" id="btnReset" type="button">Limpiar</button>
+      </div>
     </div>
 
-    <div class="foot">HC Wellness Zone • Quiz — Bono Binario</div>
+    <div class="score-wrap">
+      <p class="score-title">Resultado</p>
+      <p class="score" id="score">—</p>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz Binario</div>
   </div>
 
 <script>
-  const fmtInt = (n) => Number(n).toLocaleString("en-US");
-  const fmtUsd = (n) => Number(n).toFixed(2).replace(/\.00$/,'');
   const shuffle = (arr) => {
     const a = arr.slice();
     for (let i=a.length-1;i>0;i--){
       const j = Math.floor(Math.random()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
+      [a[i],a[j]]=[a[j],a[i]];
     }
     return a;
   };
   const pickN = (arr,n) => shuffle(arr).slice(0,n);
 
-  function calc(constrCV, derrCV, actC, actD){
-    const eligible = (actC >= 1 && actD >= 1);
-    const menor = Math.min(constrCV, derrCV);
-    const mayor = Math.max(constrCV, derrCV);
-    if(!eligible){
-      return {eligible:false, payout:0, bank:0, menor, mayor};
-    }
-    const payout = menor * 0.30;
-    const bank = mayor - menor;
-    return {eligible:true, payout, bank, menor, mayor};
+  const to2 = (n) => (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
+  const money = (n) => `${to2(n)} USD`;
+  const pts = (n) => `${Math.round(n)} pts`;
+
+  // Config bono binario
+  const BIN_RATE = 0.30;
+
+  // Si no hay directos activos en ambos lados => no cobra y (según tú) se pierde el volumen del ejemplo
+  function canEarn(activeConstruccion, activeDerrame){
+    return activeConstruccion > 0 && activeDerrame > 0;
   }
 
-  // Helper para construir opciones tipo:
-  // "Bono: 67.5 USD | Banco: 25 CV"
-  function optText(payout, bank){
-    return `Bono: ${fmtUsd(payout)} USD  |  Banco: ${fmtInt(bank)} CV`;
+  function calcBinary(leftCV, rightCV, activeC, activeD){
+    const menor = Math.min(leftCV, rightCV);
+    const mayor = Math.max(leftCV, rightCV);
+    const earned = canEarn(activeC, activeD) ? (menor * BIN_RATE) : 0;
+    const bank = canEarn(activeC, activeD) ? (mayor - menor) : 0; // si no cobra, no bank (se pierde en este ejercicio)
+    return {earned, bank, menor, mayor};
   }
 
-  // Banco de 25 preguntas (todas piden binario + banco; incluyen activos por lado)
+  // Banco de preguntas:
+  // Todas son "¿cuánto cobras y cuánto va al banco?" o "¿cobras o no cobras?"
   const BANK = [
-    // Elegibles
-    {id:"b1",  c:225,   d:300,   ac:2, ad:3},
-    {id:"b2",  c:200,   d:225,   ac:1, ad:2},
-    {id:"b3",  c:500,   d:450,   ac:3, ad:1},
-    {id:"b4",  c:1500,  d:1200,  ac:2, ad:2},
-    {id:"b5",  c:3000,  d:1800,  ac:4, ad:2},
-    {id:"b6",  c:700,   d:700,   ac:1, ad:1},
-    {id:"b7",  c:25000, d:18000, ac:5, ad:2},
-    {id:"b8",  c:10000, d:10000, ac:2, ad:3},
-    {id:"b9",  c:4200,  d:3900,  ac:2, ad:1},
-    {id:"b10", c:963,   d:482,   ac:1, ad:1},
-    {id:"b11", c:60000, d:25000, ac:3, ad:2},
-    {id:"b12", c:15000, d:10500, ac:2, ad:1},
-    {id:"b13", c:8000,  d:5200,  ac:1, ad:4},
-    {id:"b14", c:125000,d:90000, ac:6, ad:2},
-    {id:"b15", c:300,   d:100,   ac:2, ad:2},
+    // COBRA (tiene activos en ambos)
+    {id:"b1", left:10000, right:8000, ac:2, ad:3},
+    {id:"b2", left:6500, right:6500, ac:1, ad:1},
+    {id:"b3", left:12000, right:3000, ac:3, ad:2},
+    {id:"b4", left:4200, right:9700, ac:1, ad:4},
+    {id:"b5", left:15000, right:15000, ac:5, ad:2},
+    {id:"b6", left:18000, right:14000, ac:2, ad:1},
 
-    // NO elegibles (pierde bono y banco ese periodo)
-    {id:"b16", c:10000, d:10000, ac:3, ad:0}, // derrame 0
-    {id:"b17", c:5000,  d:8000,  ac:0, ad:2}, // construcción 0
-    {id:"b18", c:225,   d:225,   ac:0, ad:0},
-    {id:"b19", c:1500,  d:3000,  ac:1, ad:0},
-    {id:"b20", c:75000, d:75000, ac:0, ad:5},
-
-    // Mix extra
-    {id:"b21", c:175000,d:120000,ac:2, ad:1},
-    {id:"b22", c:2400,  d:6000,  ac:1, ad:1},
-    {id:"b23", c:510,   d:900,   ac:4, ad:2},
-    {id:"b24", c:32000, d:45000, ac:2, ad:2},
-    {id:"b25", c:390,   d:145,   ac:1, ad:3},
+    // NO COBRA (falla activos en uno)
+    {id:"n1", left:10000, right:10000, ac:3, ad:0},
+    {id:"n2", left:8000, right:12000, ac:0, ad:4},
+    {id:"n3", left:5000, right:15000, ac:2, ad:0},
+    {id:"n4", left:20000, right:9000, ac:0, ad:1},
+    {id:"n5", left:1000, right:1000, ac:1, ad:0},
   ];
 
-  function buildQuestion(q, idx){
-    const {eligible, payout, bank, menor} = calc(q.c, q.d, q.ac, q.ad);
+  function buildQuestion(item){
+    const {earned, bank, menor, mayor} = calcBinary(item.left, item.right, item.ac, item.ad);
 
-    // Distractores: 1) usar pierna mayor como base, 2) calcular bien pero banco mal
-    const mayor = Math.max(q.c, q.d);
-    const payoutWrong1 = (eligible ? mayor * 0.30 : 0); // error típico: pagar sobre la mayor
-    const bankWrong2 = (eligible ? Math.max(0, (mayor - menor) + 200) : 0); // banco alterado
-    const correct = optText(payout, bank);
+    const shouldEarn = canEarn(item.ac, item.ad);
 
-    const options = shuffle([
-      {t: correct, v: "correct"},
-      {t: optText(payoutWrong1, (eligible ? 0 : 0)), v: "w1"},
-      {t: optText(payout, bankWrong2), v: "w2"},
-    ]);
+    // Texto de pregunta
+    const qText =
+      `En esta semana tienes ${pts(item.left)} en la rama izquierda y ${pts(item.right)} en la rama derecha. ` +
+      `Directos activos: ${item.ac} en construcción y ${item.ad} en derrame. ` +
+      `¿Cuál es tu Bono Binario (USD) y cuántos puntos van al banco (pts)?`;
 
-    const card = document.createElement("div");
-    card.className = "q";
+    // Respuesta correcta (binario + banco)
+    const correctLabel = `${money(earned)} y banco ${pts(bank)}`;
 
-    card.innerHTML = `
-      <div class="q-title">P${idx+1}. Semana binaria (CV y activos)</div>
-      <div class="q-desc">
-        Construcción: <b>${fmtInt(q.c)} CV</b> (directos activos: <b>${q.ac}</b>)<br>
-        Derrame: <b>${fmtInt(q.d)} CV</b> (directos activos: <b>${q.ad}</b>)<br>
-        Pregunta: Calcula el <b>Bono Binario</b> y el <b>Banco</b> de esta semana.
-      </div>
-      <div class="opts">
-        ${options.map((o,i)=>`
-          <label class="opt">
-            <input type="radio" name="${q.id}" value="${o.t}" data-correct="${o.v==='correct'}">
-            ${o.t}
-          </label>
-        `).join("")}
-      </div>
-      <div class="fb" id="fb-${q.id}"></div>
-    `;
+    // Distractores (errores comunes)
+    const wrong1 = shouldEarn
+      ? `${money(mayor * BIN_RATE)} y banco ${pts(0)}`          // calculan sobre la mayor
+      : `${money(menor * BIN_RATE)} y banco ${pts(mayor-menor)}`; // creen que cobra aunque no deba
 
-    // guardamos la respuesta correcta en el objeto para validación
-    q._correctText = correct;
-    q._eligible = eligible;
-    q._explain = eligible
-      ? `Pierna menor = ${fmtInt(menor)} CV → Bono = ${fmtUsd(menor*0.30)} USD. Banco = excedente = ${fmtInt(Math.abs(q.c-q.d))} CV.`
-      : `No cumple activos en ambos lados (Construcción: ${q.ac}, Derrame: ${q.ad}) → NO cobra y el banco se pierde este periodo.`;
+    const wrong2 = shouldEarn
+      ? `${money(menor * 0.25)} y banco ${pts(mayor-menor)}`    // porcentaje equivocado
+      : `${money(0)} y banco ${pts(mayor-menor)}`;             // creen que se va al banco aunque no cobre
 
-    return card;
+    let options = shuffle([correctLabel, wrong1, wrong2]).map(txt => ({
+      label: txt,
+      value: txt,
+      isCorrect: txt === correctLabel
+    }));
+
+    return {
+      id: item.id,
+      text: qText,
+      explain: shouldEarn
+        ? `Rama menor = ${pts(menor)}. Bono = 30% de ${pts(menor)} → ${money(earned)}. Banco = ${pts(mayor-menor)}.`
+        : `No cobras porque no tienes directos activos en ambas ramas. Bono = ${money(0)} y en este ejercicio el volumen se pierde.`
+      ,
+      correctValue: correctLabel,
+      options
+    };
   }
 
   let current = [];
@@ -200,17 +243,34 @@
   function render(){
     const host = document.getElementById("quiz");
     host.innerHTML = "";
-    document.getElementById("score").textContent = "";
+    document.getElementById("score").textContent = "—";
 
-    current = pickN(BANK, 10).map(x => ({...x}));
-    current.forEach((q, i) => host.appendChild(buildQuestion(q, i)));
+    current = pickN(BANK, 10).map(buildQuestion);
+
+    current.forEach((q, i) => {
+      const card = document.createElement("div");
+      card.className = "q";
+      card.innerHTML = `
+        <div class="q-title">P${i+1}. ${q.text}</div>
+        <div class="q-desc">Selecciona la respuesta correcta.</div>
+        <div class="opts">
+          ${q.options.map(opt => `
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${opt.value}">
+              ${opt.label}
+            </label>
+          `).join("")}
+        </div>
+        <div class="fb" id="fb-${q.id}"></div>
+      `;
+      host.appendChild(card);
+    });
   }
 
   function check(){
-    let ok = 0;
-    let total = 0;
+    let ok = 0, total = 0;
 
-    current.forEach(q=>{
+    current.forEach(q => {
       total++;
       const picked = document.querySelector(`input[name="${q.id}"]:checked`);
       const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
@@ -226,23 +286,23 @@
 
       inputs.forEach(inp => {
         const lab = inp.closest(".opt");
-        const isCorrect = (inp.value === q._correctText);
+        const isCorrect = String(inp.value) === String(q.correctValue);
         if(isCorrect) lab.classList.add("correct");
         if(inp.checked && !isCorrect) lab.classList.add("wrong");
       });
 
-      const isOk = (picked.value === q._correctText);
+      const isOk = String(picked.value) === String(q.correctValue);
       if(isOk){
         ok++;
         fb.className = "fb ok";
         fb.textContent = "Correcto ✅";
       } else {
         fb.className = "fb bad";
-        fb.textContent = `Incorrecto ❌  ${q._explain}`;
+        fb.textContent = `Incorrecto ❌  ${q.explain}`;
       }
     });
 
-    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+    document.getElementById("score").textContent = `${ok}/${total}`;
   }
 
   function reset(){
@@ -252,7 +312,7 @@
       const fb = document.getElementById(`fb-${q.id}`);
       if(fb){ fb.className="fb"; fb.textContent=""; }
     });
-    document.getElementById("score").textContent = "";
+    document.getElementById("score").textContent = "—";
   }
 
   document.getElementById("btnNew").addEventListener("click", render);
