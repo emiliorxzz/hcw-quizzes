@@ -16,51 +16,19 @@
       --bg:#f6f5f2;
       --line:#e6e6e6;
     }
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background:var(--bg);
-      color:var(--ink);
-    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
     .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
-    .top{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:16px;
-      box-shadow:0 6px 18px rgba(0,0,0,.04);
-    }
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04);}
     h1{margin:0 0 6px;font-size:22px;text-align:center;color:var(--hc-orange-dark)}
     .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
-    .rule{
-      margin:0;
-      padding:12px 14px;
-      border-radius:14px;
-      background:#fff3ea;
-      border:1px solid #ffd3b7;
-      font-weight:800;
-      line-height:1.35;
-    }
+    .rule{margin:0;padding:12px 14px;border-radius:14px;background:#fff3ea;border:1px solid #ffd3b7;font-weight:800;line-height:1.35}
     code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
-    .section-title{margin:18px 0 6px;font-size:16px;font-weight:900;color:#222}
-    .q{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-left:6px solid var(--hc-orange);
-      border-radius:18px;
-      padding:14px;
-      margin:12px 0;
-    }
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid #ffd3b7;background:#fff;font-size:12px;color:#222;font-weight:900;margin-top:8px}
+
+    .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
     .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
     .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
-    .opt{
-      display:block;
-      padding:10px 12px;
-      border:1px solid var(--line);
-      border-radius:14px;
-      margin:8px 0;
-      background:#fff;
-    }
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
     .opt input{margin-right:10px;transform:translateY(1px)}
     .opt.correct{border-color:var(--ok);background:#e9f7ee}
     .opt.wrong{border-color:var(--bad);background:#fdecee}
@@ -73,147 +41,204 @@
       border:1px solid var(--line);
       border-radius:18px;
       padding:14px;
-      margin:18px 0 26px;
+      margin:18px 0 14px;
+    }
+    .controls-row{
       display:flex;
+      justify-content:flex-end;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
     }
-    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
-    .btn-primary{background:var(--hc-orange);color:#fff}
-    .btn-primary:hover{background:var(--hc-orange-dark)}
-    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
-    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
-
-    .pill{
-      display:inline-block;
-      padding:2px 10px;
-      border-radius:999px;
-      border:1px solid #ffd3b7;
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0;line-height:1}
+    .btn-review{
+      background:var(--hc-orange);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:16px;
+      font-size:16px;
+      box-shadow:0 10px 18px rgba(222,115,25,.25);
+    }
+    .btn-review:hover{background:var(--hc-orange-dark)}
+    .btn-white{
       background:#fff;
-      font-size:12px;
-      color:#222;
+      color:var(--hc-orange-dark);
+      border:1px solid var(--hc-orange-dark);
+      padding:12px 14px;
+      border-radius:16px;
+      font-size:14px;
+    }
+    .btn-white:hover{
+      background:#fff7f1;
+      border-color:var(--hc-orange);
+      color:var(--hc-orange);
+    }
+
+    .score-wrap{
+      background:linear-gradient(90deg, #fff3ea, #ffffff);
+      border:1px solid #ffd3b7;
+      border-radius:18px;
+      padding:14px;
+      margin:12px 0 26px;
+      text-align:center;
+    }
+    .score-title{
       font-weight:900;
-      margin-top:6px;
+      color:var(--hc-orange-dark);
+      margin:0 0 6px;
+      font-size:16px;
+    }
+    .score{
+      font-weight:1000;
+      font-size:28px;
+      letter-spacing:.3px;
+      margin:0;
     }
     .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+
+    .floating-back{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:9999;
+      background:#000;
+      color:#fff;
+      text-decoration:none;
+      font-weight:900;
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow:0 10px 20px rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.15);
+    }
+    .floating-back:hover{opacity:.92}
   </style>
 </head>
 <body>
+  <!-- Cambia este link si quieres que regrese a otra página -->
+  <a class="floating-back" href="https://emiliorxzz-huyaz.wordpress.com/5-plan-de-compensacion/">Volver a HCW Zone</a>
+
   <div class="wrap">
     <div class="top">
       <h1>Quiz Bono de Inicio Rápido</h1>
-      <p class="sub">
-        Practica cómo se calcula el <b>Bono de Inicio Rápido</b>. Cada intento genera <b>10 preguntas</b>.
-      </p>
+      <p class="sub">Cada intento genera <b>10 preguntas</b>. Responde y presiona <b>Revisar</b>.</p>
       <p class="rule">
-        Regla del bono por inscripción (primera orden del inscrito):<br>
-        • Si en el periodo realizaste <b>1 inscripción</b> → <code>25% del CV</code><br>
-        • Si en el periodo realizaste <b>2 o más inscripciones</b> → <code>40% del CV</code> (25% + 15% adicional)
-        <div class="pill">Tip: El bono se calcula sobre el CV</div>
+        Regla (sobre la primera orden del inscrito):<br>
+        • Si realizaste <b>1 inscripción</b> en el periodo → <code>25% del CV</code><br>
+        • Si realizaste <b>2 o más inscripciones</b> en el periodo → <code>40% del CV</code><br>
+        <div class="pill">Tip: El bono se calcula sobre el CV de cada primera orden.</div>
       </p>
     </div>
 
-    <div class="section-title">Examen</div>
     <div id="quiz"></div>
 
     <div class="controls">
-      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
-      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
-      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
-      <div class="score" id="score"></div>
+      <div class="controls-row">
+        <button class="btn-review" id="btnCheck" type="button">Revisar</button>
+        <button class="btn-white" id="btnNew" type="button">Nueva versión</button>
+        <button class="btn-white" id="btnReset" type="button">Limpiar</button>
+      </div>
     </div>
 
-    <div class="foot">HC Wellness Zone • Quiz — Inicio Rápido</div>
+    <div class="score-wrap">
+      <p class="score-title">Resultado</p>
+      <p class="score" id="score">—</p>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz Inicio Rápido</div>
   </div>
 
 <script>
-  // Helpers
-  const fmtMoney = (n) => {
-    const num = Number(n);
-    return (Number.isInteger(num) ? num.toString() : num.toFixed(2)).replace(/\.00$/,'');
-  };
   const shuffle = (arr) => {
     const a = arr.slice();
     for (let i=a.length-1;i>0;i--){
       const j = Math.floor(Math.random()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
+      [a[i],a[j]]=[a[j],a[i]];
     }
     return a;
   };
   const pickN = (arr,n) => shuffle(arr).slice(0,n);
 
-  const rate = (inscripcionesEnPeriodo) => (inscripcionesEnPeriodo >= 2 ? 0.40 : 0.25);
-  const bonus = (cv, inscripcionesEnPeriodo) => cv * rate(inscripcionesEnPeriodo);
+  const to2 = (n) => (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
+  const usd = (n) => `${to2(n)} USD`;
 
-  // Banco A (cálculo directo) — 18 preguntas
-  const BANK_A = [
-    {id:"a1",  q:"En este periodo realizaste 1 inscripción. La primera orden del inscrito fue de 225 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[56.25,90,45], correct:56.25, exp:"1 inscripción: 225 × 0.25 = 56.25."},
-    {id:"a2",  q:"En este periodo realizaste 2 o más inscripciones. La primera orden del inscrito fue de 225 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[90,56.25,67.50], correct:90, exp:"2 o más: 225 × 0.40 = 90."},
-    {id:"a3",  q:"En este periodo realizaste 1 inscripción. Primera orden = 50 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[12.50,20,10], correct:12.50, exp:"1 inscripción: 50 × 0.25 = 12.50."},
-    {id:"a4",  q:"En este periodo realizaste 2 o más inscripciones. Primera orden = 50 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[20,12.50,25], correct:20, exp:"2 o más: 50 × 0.40 = 20."},
-    {id:"a5",  q:"En este periodo realizaste 1 inscripción. Primera orden = 70 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[17.50,28,35], correct:17.50, exp:"1 inscripción: 70 × 0.25 = 17.50."},
-    {id:"a6",  q:"En este periodo realizaste 2 o más inscripciones. Primera orden = 70 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[28,17.50,21], correct:28, exp:"2 o más: 70 × 0.40 = 28."},
-    {id:"a7",  q:"En este periodo realizaste 1 inscripción. Primera orden = 300 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[75,120,90], correct:75, exp:"1 inscripción: 300 × 0.25 = 75."},
-    {id:"a8",  q:"En este periodo realizaste 2 o más inscripciones. Primera orden = 300 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[120,75,105], correct:120, exp:"2 o más: 300 × 0.40 = 120."},
-    {id:"a9",  q:"En este periodo realizaste 1 inscripción. Primera orden = 150 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[37.50,60,45], correct:37.50, exp:"1 inscripción: 150 × 0.25 = 37.50."},
-    {id:"a10", q:"En este periodo realizaste 2 o más inscripciones. Primera orden = 150 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[60,37.50,67.50], correct:60, exp:"2 o más: 150 × 0.40 = 60."},
-    {id:"a11", q:"En este periodo realizaste 2 o más inscripciones. Primera orden = 100 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[40,25,30], correct:40, exp:"2 o más: 100 × 0.40 = 40."},
-    {id:"a12", q:"En este periodo realizaste 1 inscripción. Primera orden = 100 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[25,40,20], correct:25, exp:"1 inscripción: 100 × 0.25 = 25."},
-    {id:"a13", q:"Si en el periodo realizaste 2 o más inscripciones, ¿cuál es el porcentaje total que se paga en Inicio Rápido sobre el CV?", options:[40,25,15], correct:40, exp:"2 o más inscripciones: 25% + 15% adicional = 40%."},
-    {id:"a14", q:"Si en el periodo realizaste 1 inscripción, ¿cuál es el porcentaje que se paga en Inicio Rápido sobre el CV?", options:[25,40,15], correct:25, exp:"Con 1 inscripción se paga 25% del CV."},
-    {id:"a15", q:"En este periodo realizaste 2 o más inscripciones. Primera orden = 482 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[192.80,120.50,173.52], correct:192.80, exp:"2 o más: 482 × 0.40 = 192.80."},
-    {id:"a16", q:"En este periodo realizaste 1 inscripción. Primera orden = 482 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[120.50,192.80,110], correct:120.50, exp:"1 inscripción: 482 × 0.25 = 120.50."},
-    {id:"a17", q:"En este periodo realizaste 2 o más inscripciones. Primera orden = 963 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[385.20,240.75,360], correct:385.20, exp:"2 o más: 963 × 0.40 = 385.20."},
-    {id:"a18", q:"En este periodo realizaste 1 inscripción. Primera orden = 963 CV. ¿Cuál es el Bono de Inicio Rápido en USD?", options:[240.75,385.20,210], correct:240.75, exp:"1 inscripción: 963 × 0.25 = 240.75."}
+  const quickStart = (cv, inscripciones) => cv * (inscripciones >= 2 ? 0.40 : 0.25);
+
+  // Banco (mínimo 20 para variar). Cada intento toma 10.
+  // 3 opciones siempre: 1 correcta + 2 incorrectas (y se mezclan)
+  const BANK = [
+    {id:"q1", text:"En este periodo realizaste 1 inscripción. Primera orden = 150 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:150, ins:1},
+    {id:"q2", text:"En este periodo realizaste 2 o más inscripciones. Primera orden = 150 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:150, ins:2},
+    {id:"q3", text:"En este periodo realizaste 1 inscripción. Primera orden = 225 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:225, ins:1},
+    {id:"q4", text:"En este periodo realizaste 2 o más inscripciones. Primera orden = 225 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:225, ins:2},
+    {id:"q5", text:"En este periodo realizaste 1 inscripción. Primera orden = 450 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:450, ins:1},
+    {id:"q6", text:"En este periodo realizaste 2 o más inscripciones. Primera orden = 450 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:450, ins:2},
+
+    {id:"q7", text:"En este periodo realizaste 2 o más inscripciones. Tienes 3 primeras órdenes de 225 CV, 225 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[225,225,225], ins:2},
+    {id:"q8", text:"En este periodo realizaste 1 inscripción. Tienes 2 primeras órdenes de 150 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[150,225], ins:1},
+    {id:"q9", text:"En este periodo realizaste 2 o más inscripciones. Tienes 2 primeras órdenes de 150 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[150,225], ins:2},
+    {id:"q10", text:"En este periodo realizaste 1 inscripción. Tienes 3 primeras órdenes de 150 CV, 150 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[150,150,225], ins:1},
+    {id:"q11", text:"En este periodo realizaste 2 o más inscripciones. Tienes 3 primeras órdenes de 150 CV, 150 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[150,150,225], ins:2},
+    {id:"q12", text:"En este periodo realizaste 2 o más inscripciones. Tienes 4 primeras órdenes de 150 CV, 150 CV, 150 CV y 150 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[150,150,150,150], ins:2},
+
+    {id:"q13", text:"En este periodo realizaste 1 inscripción. Primera orden = 70 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:70, ins:1},
+    {id:"q14", text:"En este periodo realizaste 2 o más inscripciones. Primera orden = 70 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:70, ins:2},
+    {id:"q15", text:"En este periodo realizaste 1 inscripción. Primera orden = 100 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:100, ins:1},
+    {id:"q16", text:"En este periodo realizaste 2 o más inscripciones. Primera orden = 100 CV. ¿Cuánto ganas de Bono de Inicio Rápido (USD)?", cv:100, ins:2},
+
+    {id:"q17", text:"En este periodo realizaste 2 o más inscripciones. Tienes 2 primeras órdenes de 450 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[450,225], ins:2},
+    {id:"q18", text:"En este periodo realizaste 1 inscripción. Tienes 2 primeras órdenes de 450 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[450,225], ins:1},
+    {id:"q19", text:"En este periodo realizaste 2 o más inscripciones. Tienes 3 primeras órdenes de 450 CV, 150 CV y 70 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[450,150,70], ins:2},
+    {id:"q20", text:"En este periodo realizaste 1 inscripción. Tienes 3 primeras órdenes de 450 CV, 150 CV y 70 CV. ¿Cuál es el total del Bono de Inicio Rápido (USD)?", multi:[450,150,70], ins:1},
   ];
 
-  // Banco B (escenarios) — 18 preguntas
-  // En los escenarios, si el periodo tiene 2 o más inscripciones, se aplica 40% a TODAS las inscripciones del periodo.
-  const BANK_B = [
-    {id:"b1", q:"En este periodo realizaste 1 inscripción. La primera orden fue de 225 CV. ¿Cuánto se paga en Bono de Inicio Rápido en USD?", options:[56.25,90,45], correct:56.25, exp:"1 inscripción: 225 × 0.25 = 56.25."},
-    {id:"b2", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 225 CV y 50 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[110,102.50,90], correct:110, exp:"2 o más: 225×0.40=90 y 50×0.40=20. Total=110."},
-    {id:"b3", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 70 CV y 70 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[56,35,70], correct:56, exp:"2 o más: 70×0.40=28; 28+28=56."},
-    {id:"b4", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 300 CV, 150 CV y 50 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[200,125,180], correct:200, exp:"2 o más: 120 + 60 + 20 = 200."},
-    {id:"b5", q:"En este periodo realizaste 1 inscripción con primera orden de 50 CV. ¿Cuánto se paga en Bono de Inicio Rápido en USD?", options:[12.50,20,10], correct:12.50, exp:"1 inscripción: 50 × 0.25 = 12.50."},
-    {id:"b6", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 100 CV y 100 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[80,50,60], correct:80, exp:"2 o más: 40 + 40 = 80."},
-    {id:"b7", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 150 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[150,131.25,127.50], correct:150, exp:"2 o más: 150×0.40=60 y 225×0.40=90. Total=150."},
-    {id:"b8", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 225 CV, 225 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[270,168.75,225], correct:270, exp:"2 o más: cada 225×0.40=90; 90×3=270."},
-    {id:"b9", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 50 CV y 70 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[48,30,42.50], correct:48, exp:"2 o más: 50×0.40=20 y 70×0.40=28. Total=48."},
-    {id:"b10", q:"En este periodo realizaste 1 inscripción con primera orden de 150 CV. ¿Cuánto se paga en Bono de Inicio Rápido en USD?", options:[37.50,60,45], correct:37.50, exp:"1 inscripción: 150 × 0.25 = 37.50."},
-    {id:"b11", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 100 CV, 150 CV y 300 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[220,137.50,175], correct:220, exp:"2 o más: 40 + 60 + 120 = 220."},
-    {id:"b12", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 70 CV y 300 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[148,92.50,120], correct:148, exp:"2 o más: 28 + 120 = 148."},
-    {id:"b13", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 482 CV y 963 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[578.00,361.25,505.70], correct:578.00, exp:"2 o más: 482×0.40=192.80; 963×0.40=385.20. Total=578.00."},
-    {id:"b14", q:"En este periodo realizaste 1 inscripción con primera orden de 482 CV y otra inscripción NO existe. ¿Cuánto se paga en Bono de Inicio Rápido en USD?", options:[120.50,192.80,110], correct:120.50, exp:"1 inscripción: 482×0.25=120.50."},
-    {id:"b15", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 225 CV y 225 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[180,112.50,135], correct:180, exp:"2 o más: 90 + 90 = 180."},
-    {id:"b16", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 300 CV y 300 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[240,150,180], correct:240, exp:"2 o más: 120 + 120 = 240."},
-    {id:"b17", q:"En este periodo realizaste 1 inscripción con primera orden de 963 CV. ¿Cuánto se paga en Bono de Inicio Rápido en USD?", options:[240.75,385.20,210], correct:240.75, exp:"1 inscripción: 963 × 0.25 = 240.75."},
-    {id:"b18", q:"En este periodo realizaste 2 o más inscripciones con primeras órdenes de 963 CV y 50 CV. ¿Cuál es el total del Bono de Inicio Rápido en USD?", options:[405.20,397.70,385.20], correct:405.20, exp:"2 o más: 963×0.40=385.20 y 50×0.40=20. Total=405.20."}
-  ];
+  function calcCorrect(item){
+    if(item.multi){
+      return item.multi.reduce((sum,cv)=>sum + quickStart(cv, item.ins), 0);
+    }
+    return quickStart(item.cv, item.ins);
+  }
+
+  function make3Options(correct){
+    const c = Number(correct);
+    const w1 = c * 0.625;  // distractor % raro
+    const w2 = c * 1.25;   // distractor por “sumar de más”
+    let opts = [c, w1, w2].map(v => Number(to2(v)));
+    // Asegura 3 diferentes
+    if(new Set(opts).size < 3){
+      opts = [c, c*0.9, c*1.1].map(v => Number(to2(v)));
+    }
+    return shuffle(opts).slice(0,3).map(v => ({
+      label: usd(v),
+      value: String(to2(v)),
+      isCorrect: Math.abs(v - Number(to2(c))) < 0.001
+    }));
+  }
 
   let current = [];
 
   function render(){
     const host = document.getElementById("quiz");
     host.innerHTML = "";
-    document.getElementById("score").textContent = "";
+    document.getElementById("score").textContent = "—";
 
-    const pickA = pickN(BANK_A, 5);
-    const pickB = pickN(BANK_B, 5);
-    current = shuffle([...pickA, ...pickB]);
+    current = pickN(BANK, 10).map(item => {
+      const correct = calcCorrect(item);
+      const correctValue = String(to2(correct));
+      const options = make3Options(correct);
+      return {...item, correctValue, correct, options};
+    });
 
     current.forEach((q, i) => {
       const card = document.createElement("div");
       card.className = "q";
       card.innerHTML = `
-        <div class="q-title">P${i+1}. ${q.q}</div>
+        <div class="q-title">P${i+1}. ${q.text}</div>
         <div class="q-desc">Selecciona la respuesta correcta.</div>
         <div class="opts">
           ${q.options.map(opt => `
             <label class="opt">
-              <input type="radio" name="${q.id}" value="${opt}">
-              ${fmtMoney(opt)}
+              <input type="radio" name="${q.id}" value="${opt.value}">
+              ${opt.label}
             </label>
           `).join("")}
         </div>
@@ -224,8 +249,7 @@
   }
 
   function check(){
-    let ok = 0;
-    let total = 0;
+    let ok = 0, total = 0;
 
     current.forEach(q => {
       total++;
@@ -243,23 +267,23 @@
 
       inputs.forEach(inp => {
         const lab = inp.closest(".opt");
-        const isCorrect = String(inp.value) === String(q.correct);
+        const isCorrect = String(inp.value) === String(q.correctValue);
         if(isCorrect) lab.classList.add("correct");
         if(inp.checked && !isCorrect) lab.classList.add("wrong");
       });
 
-      const isOk = String(picked.value) === String(q.correct);
+      const isOk = String(picked.value) === String(q.correctValue);
       if(isOk){
         ok++;
         fb.className = "fb ok";
         fb.textContent = "Correcto ✅";
       } else {
         fb.className = "fb bad";
-        fb.textContent = `Incorrecto ❌  ${q.exp}`;
+        fb.textContent = `Incorrecto ❌  Correcto: ${usd(Number(q.correctValue))}`;
       }
     });
 
-    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+    document.getElementById("score").textContent = `${ok}/${total}`;
   }
 
   function reset(){
@@ -269,7 +293,7 @@
       const fb = document.getElementById(`fb-${q.id}`);
       if(fb){ fb.className="fb"; fb.textContent=""; }
     });
-    document.getElementById("score").textContent = "";
+    document.getElementById("score").textContent = "—";
   }
 
   document.getElementById("btnNew").addEventListener("click", render);
