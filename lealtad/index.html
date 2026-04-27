@@ -25,7 +25,6 @@
     code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
     .pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid #ffd3b7;background:#fff;font-size:12px;color:#222;font-weight:900;margin-top:8px}
 
-    .section-title{margin:18px 0 6px;font-size:16px;font-weight:900;color:#222}
     .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
     .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
     .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
@@ -42,225 +41,217 @@
       border:1px solid var(--line);
       border-radius:18px;
       padding:14px;
-      margin:18px 0 26px;
+      margin:18px 0 14px;
+    }
+    .controls-row{
       display:flex;
+      justify-content:flex-end;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
     }
-    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
-    .btn-primary{background:var(--hc-orange);color:#fff}
-    .btn-primary:hover{background:var(--hc-orange-dark)}
-    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
-    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0;line-height:1}
+    .btn-review{
+      background:var(--hc-orange);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:16px;
+      font-size:16px;
+      box-shadow:0 10px 18px rgba(222,115,25,.25);
+    }
+    .btn-review:hover{background:var(--hc-orange-dark)}
+    .btn-white{
+      background:#fff;
+      color:var(--hc-orange-dark);
+      border:1px solid var(--hc-orange-dark);
+      padding:12px 14px;
+      border-radius:16px;
+      font-size:14px;
+    }
+    .btn-white:hover{
+      background:#fff7f1;
+      border-color:var(--hc-orange);
+      color:var(--hc-orange);
+    }
+
+    .score-wrap{
+      background:linear-gradient(90deg, #fff3ea, #ffffff);
+      border:1px solid #ffd3b7;
+      border-radius:18px;
+      padding:14px;
+      margin:12px 0 26px;
+      text-align:center;
+    }
+    .score-title{
+      font-weight:900;
+      color:var(--hc-orange-dark);
+      margin:0 0 6px;
+      font-size:16px;
+    }
+    .score{
+      font-weight:1000;
+      font-size:28px;
+      letter-spacing:.3px;
+      margin:0;
+    }
     .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+
+    .floating-back{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:9999;
+      background:#000;
+      color:#fff;
+      text-decoration:none;
+      font-weight:900;
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow:0 10px 20px rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.15);
+    }
+    .floating-back:hover{opacity:.92}
   </style>
 </head>
 <body>
+  <!-- CAMBIA ESTE LINK SI QUIERES QUE REGRESE A OTRA PÁGINA -->
+  <a class="floating-back" href="https://emiliorxzz-huyaz.wordpress.com/5-plan-de-compensacion/">Volver a HCW Zone</a>
+
   <div class="wrap">
     <div class="top">
       <h1>Quiz Programa de Lealtad (LRP)</h1>
-      <p class="sub">Cada intento genera <b>10 preguntas</b>: 5 de cálculo directo y 5 de escenarios.</p>
+      <p class="sub">Cada intento genera <b>10 preguntas</b>. Responde y presiona <b>Revisar</b>.</p>
       <p class="rule">
-        Reglas de acumulación LRP:<br>
-        • Orden personal (tu compra) → <code>LRP = CV × 10%</code><br>
-        • Orden de tus directos → <code>LRP = CV × 5%</code>
-        <div class="pill">Tip: Responde en LRP (puntos)</div>
+        Regla LRP:<br>
+        • Orden personal: <code>LRP = CV × 10%</code><br>
+        • Orden de directos: <code>LRP = CV × 5%</code>
+        <div class="pill">Tip: suma LRP de personal + LRP de directos.</div>
       </p>
     </div>
 
-    <div class="section-title">Sección A — Cálculo directo</div>
-    <div id="secA"></div>
-
-    <div class="section-title">Sección B — Escenarios (sumas)</div>
-    <div id="secB"></div>
+    <div id="quiz"></div>
 
     <div class="controls">
-      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
-      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
-      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
-      <div class="score" id="score"></div>
+      <div class="controls-row">
+        <button class="btn-review" id="btnCheck" type="button">Revisar</button>
+        <button class="btn-white" id="btnNew" type="button">Nueva versión</button>
+        <button class="btn-white" id="btnReset" type="button">Limpiar</button>
+      </div>
     </div>
 
-    <div class="foot">HC Wellness Zone • Quiz — Programa de Lealtad (LRP)</div>
+    <div class="score-wrap">
+      <p class="score-title">Resultado</p>
+      <p class="score" id="score">—</p>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz LRP</div>
   </div>
 
 <script>
-  const fmt = (n) => {
-    const num = Number(n);
-    if (Number.isInteger(num)) return num.toString();
-    return num.toFixed(2).replace(/\.00$/,'');
-  };
-
-  function shuffle(arr){
+  const shuffle = (arr) => {
     const a = arr.slice();
-    for(let i=a.length-1;i>0;i--){
+    for (let i=a.length-1;i>0;i--){
       const j = Math.floor(Math.random()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
+      [a[i],a[j]]=[a[j],a[i]];
     }
     return a;
-  }
-  function pickN(arr,n){ return shuffle(arr).slice(0,n); }
+  };
+  const pickN = (arr,n) => shuffle(arr).slice(0,n);
 
-  // Helpers LRP
+  const to2 = (n) => (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
+  const money = (n) => `${to2(n)} LRP`;
+
+  // Calcula LRP
   const lrpPersonal = (cv) => cv * 0.10;
   const lrpDirecto  = (cv) => cv * 0.05;
 
-  // ===== Banco A (25) — Directo / Personal =====
-  const BANK_A = [
-    {id:"a1",  q:"Tu orden personal fue de 50 CV. ¿Cuántos LRP acumulas?", options:[5,2.5,10], correct:5, explain:"Personal: 50×0.10=5."},
-    {id:"a2",  q:"La orden de un directo fue de 50 CV. ¿Cuántos LRP acumulas por ese directo?", options:[2.5,5,1], correct:2.5, explain:"Directo: 50×0.05=2.5."},
-    {id:"a3",  q:"Tu orden personal fue de 70 CV. ¿Cuántos LRP acumulas?", options:[7,3.5,10], correct:7, explain:"Personal: 70×0.10=7."},
-    {id:"a4",  q:"La orden de un directo fue de 70 CV. ¿Cuántos LRP acumulas por ese directo?", options:[3.5,7,2.5], correct:3.5, explain:"Directo: 70×0.05=3.5."},
-    {id:"a5",  q:"Tu orden personal fue de 100 CV. ¿Cuántos LRP acumulas?", options:[10,5,15], correct:10, explain:"Personal: 100×0.10=10."},
-    {id:"a6",  q:"La orden de un directo fue de 100 CV. ¿Cuántos LRP acumulas por ese directo?", options:[5,10,2.5], correct:5, explain:"Directo: 100×0.05=5."},
-    {id:"a7",  q:"Tu orden personal fue de 150 CV. ¿Cuántos LRP acumulas?", options:[15,7.5,20], correct:15, explain:"Personal: 150×0.10=15."},
-    {id:"a8",  q:"La orden de un directo fue de 150 CV. ¿Cuántos LRP acumulas por ese directo?", options:[7.5,15,10], correct:7.5, explain:"Directo: 150×0.05=7.5."},
-    {id:"a9",  q:"Tu orden personal fue de 225 CV. ¿Cuántos LRP acumulas?", options:[22.5,11.25,25], correct:22.5, explain:"Personal: 225×0.10=22.5."},
-    {id:"a10", q:"La orden de un directo fue de 225 CV. ¿Cuántos LRP acumulas por ese directo?", options:[11.25,22.5,9], correct:11.25, explain:"Directo: 225×0.05=11.25."},
+  // Banco de preguntas (se mezclan y cada intento toma 10)
+  // Nota: TODAS tienen 3 opciones: 1 correcta + 2 incorrectas
+  const BANK = [
+    // Personal
+    {id:"p1",  text:"Tu orden personal tiene 50 CV. ¿Cuántos LRP generas por tu orden personal?", correct: lrpPersonal(50)},
+    {id:"p2",  text:"Tu orden personal tiene 70 CV. ¿Cuántos LRP generas por tu orden personal?", correct: lrpPersonal(70)},
+    {id:"p3",  text:"Tu orden personal tiene 100 CV. ¿Cuántos LRP generas por tu orden personal?", correct: lrpPersonal(100)},
+    {id:"p4",  text:"Tu orden personal tiene 225 CV. ¿Cuántos LRP generas por tu orden personal?", correct: lrpPersonal(225)},
+    {id:"p5",  text:"Tu orden personal tiene 450 CV. ¿Cuántos LRP generas por tu orden personal?", correct: lrpPersonal(450)},
 
-    // variaciones para que rote
-    {id:"a11", q:"Tu orden personal fue de 40 CV. ¿Cuántos LRP acumulas?", options:[4,2,6], correct:4, explain:"Personal: 40×0.10=4."},
-    {id:"a12", q:"La orden de un directo fue de 40 CV. ¿Cuántos LRP acumulas por ese directo?", options:[2,4,1], correct:2, explain:"Directo: 40×0.05=2."},
-    {id:"a13", q:"Tu orden personal fue de 80 CV. ¿Cuántos LRP acumulas?", options:[8,4,10], correct:8, explain:"Personal: 80×0.10=8."},
-    {id:"a14", q:"La orden de un directo fue de 80 CV. ¿Cuántos LRP acumulas por ese directo?", options:[4,8,2], correct:4, explain:"Directo: 80×0.05=4."},
-    {id:"a15", q:"Tu orden personal fue de 300 CV. ¿Cuántos LRP acumulas?", options:[30,15,25], correct:30, explain:"Personal: 300×0.10=30."},
-    {id:"a16", q:"La orden de un directo fue de 300 CV. ¿Cuántos LRP acumulas por ese directo?", options:[15,30,10], correct:15, explain:"Directo: 300×0.05=15."},
-    {id:"a17", q:"Tu orden personal fue de 120 CV. ¿Cuántos LRP acumulas?", options:[12,6,10], correct:12, explain:"Personal: 120×0.10=12."},
-    {id:"a18", q:"La orden de un directo fue de 120 CV. ¿Cuántos LRP acumulas por ese directo?", options:[6,12,5], correct:6, explain:"Directo: 120×0.05=6."},
-    {id:"a19", q:"Tu orden personal fue de 200 CV. ¿Cuántos LRP acumulas?", options:[20,10,25], correct:20, explain:"Personal: 200×0.10=20."},
-    {id:"a20", q:"La orden de un directo fue de 200 CV. ¿Cuántos LRP acumulas por ese directo?", options:[10,20,8], correct:10, explain:"Directo: 200×0.05=10."},
-    {id:"a21", q:"Tu orden personal fue de 60 CV. ¿Cuántos LRP acumulas?", options:[6,3,5], correct:6, explain:"Personal: 60×0.10=6."},
-    {id:"a22", q:"La orden de un directo fue de 60 CV. ¿Cuántos LRP acumulas por ese directo?", options:[3,6,2], correct:3, explain:"Directo: 60×0.05=3."},
-    {id:"a23", q:"Tu orden personal fue de 90 CV. ¿Cuántos LRP acumulas?", options:[9,4.5,10], correct:9, explain:"Personal: 90×0.10=9."},
-    {id:"a24", q:"La orden de un directo fue de 90 CV. ¿Cuántos LRP acumulas por ese directo?", options:[4.5,9,3], correct:4.5, explain:"Directo: 90×0.05=4.5."},
-    {id:"a25", q:"Tu orden personal fue de 250 CV. ¿Cuántos LRP acumulas?", options:[25,12.5,20], correct:25, explain:"Personal: 250×0.10=25."},
+    // Directos (una orden)
+    {id:"d1",  text:"Un directo hizo una compra de 40 CV. ¿Cuántos LRP te genera esa orden de tu directo?", correct: lrpDirecto(40)},
+    {id:"d2",  text:"Un directo hizo una compra de 50 CV. ¿Cuántos LRP te genera esa orden de tu directo?", correct: lrpDirecto(50)},
+    {id:"d3",  text:"Un directo hizo una compra de 70 CV. ¿Cuántos LRP te genera esa orden de tu directo?", correct: lrpDirecto(70)},
+    {id:"d4",  text:"Un directo hizo una compra de 225 CV. ¿Cuántos LRP te genera esa orden de tu directo?", correct: lrpDirecto(225)},
+    {id:"d5",  text:"Un directo hizo una compra de 450 CV. ¿Cuántos LRP te genera esa orden de tu directo?", correct: lrpDirecto(450)},
+
+    // Mixto (personal + directos)
+    {id:"m1",  text:"Tu orden personal es 100 CV y tienes 4 directos con compras de 70, 70, 50 y 50 CV. ¿Cuánto LRP total generas?", correct: lrpPersonal(100)+lrpDirecto(70)+lrpDirecto(70)+lrpDirecto(50)+lrpDirecto(50)},
+    {id:"m2",  text:"Tu orden personal es 40 CV y tienes 5 directos con compras de 40 CV cada uno. ¿Cuánto LRP total generas?", correct: lrpPersonal(40)+5*lrpDirecto(40)},
+    {id:"m3",  text:"Sin orden personal, tienes 4 directos con compras de 50 CV cada uno. ¿Cuánto LRP total generas?", correct: 4*lrpDirecto(50)},
+    {id:"m4",  text:"Tu orden personal es 70 CV y tienes 2 directos con compras de 225 CV y 50 CV. ¿Cuánto LRP total generas?", correct: lrpPersonal(70)+lrpDirecto(225)+lrpDirecto(50)},
+    {id:"m5",  text:"Tu orden personal es 225 CV y tienes 3 directos con compras de 40, 70 y 100 CV. ¿Cuánto LRP total generas?", correct: lrpPersonal(225)+lrpDirecto(40)+lrpDirecto(70)+lrpDirecto(100)}
   ];
 
-  // ===== Banco B (25) — Escenarios (sumas) =====
-  // Nota: escenarios mezclados con 2, 3 y 4 movimientos para que se sientan reales.
-  const BANK_B = [
-    {id:"b1", q:"No hiciste orden personal. Tienes 4 directos con 50 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[10,5,12.5], correct:10, explain:"Cada directo: 50×0.05=2.5. Total: 2.5×4=10."},
-
-    {id:"b2", q:"Tu orden personal fue de 40 CV y tienes 5 directos con 40 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[14,12,10], correct:14, explain:"Personal: 40×0.10=4. Directos: 5×(40×0.05=2)=10. Total=14."},
-
-    {id:"b3", q:"Tu orden personal fue de 50 CV y tienes 3 directos con 50 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[12.5,10,15], correct:12.5, explain:"Personal: 5. Directos: 3×2.5=7.5. Total=12.5."},
-
-    {id:"b4", q:"Tu orden personal fue de 100 CV y tienes 2 directos con 70 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[17,14,21], correct:17, explain:"Personal: 10. Directos: 2×(70×0.05=3.5)=7. Total=17."},
-
-    {id:"b5", q:"Tu orden personal fue de 225 CV y 1 directo hizo 225 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[33.75,28.125,45], correct:33.75, explain:"Personal: 22.5. Directo: 11.25. Total=33.75."},
-
-    {id:"b6", q:"Tu orden personal fue de 70 CV y tienes 4 directos de 70 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[21,17.5,14], correct:21, explain:"Personal: 7. Directos: 4×3.5=14. Total=21."},
-
-    {id:"b7", q:"Tu orden personal fue de 300 CV y tienes 2 directos con 100 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[40,35,45], correct:40, explain:"Personal: 30. Directos: 2×5=10. Total=40."},
-
-    {id:"b8", q:"Tu orden personal fue de 150 CV y 3 directos hicieron 150 CV, 100 CV y 50 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[30,27.5,25], correct:30, explain:"Personal: 15. Directos: 7.5+5+2.5=15. Total=30."},
-
-    {id:"b9", q:"Tu orden personal fue de 100 CV y 4 directos hicieron 70, 70, 50 y 50 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[22,25,20], correct:22, explain:"Personal: 10. Directos: 3.5+3.5+2.5+2.5=12. Total=22."},
-
-    {id:"b10", q:"Tu orden personal fue de 225 CV y 3 directos hicieron 70 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[33,35.5,40], correct:33, explain:"Personal: 22.5. Directos: 3×3.5=10.5. Total=33."},
-
-    // 3 movimientos
-    {id:"b11", q:"Tu orden personal fue de 70 CV y 2 directos hicieron 225 CV y 100 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[23.25,20.5,25], correct:23.25, explain:"Personal: 7. Directos: 11.25 + 5 = 16.25. Total=23.25."},
-
-    {id:"b12", q:"Tu orden personal fue de 80 CV y 1 directo hizo 300 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[23,18,28], correct:23, explain:"Personal: 8. Directo: 15. Total=23."},
-
-    {id:"b13", q:"No hiciste orden personal. Tienes 6 directos con 50 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[15,12.5,10], correct:15, explain:"Cada directo: 2.5. Total: 2.5×6=15."},
-
-    // 4 movimientos
-    {id:"b14", q:"Tu orden personal fue de 50 CV y 3 directos hicieron 150 CV, 40 CV y 40 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[16.5,15.5,18], correct:16.5, explain:"Personal: 5. Directos: 7.5 + 2 + 2 = 11.5. Total=16.5."},
-
-    {id:"b15", q:"Tu orden personal fue de 150 CV y 3 directos hicieron 225 CV, 225 CV y 70 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[41,38,41.75], correct:41, explain:"Personal: 15. Directos: 11.25+11.25+3.5=26. Total=41."},
-
-    // extras para rotación
-    {id:"b16", q:"Tu orden personal fue de 60 CV y 2 directos hicieron 60 CV y 60 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[12,9,15], correct:12, explain:"Personal: 6. Directos: 3+3=6. Total=12."},
-
-    {id:"b17", q:"Tu orden personal fue de 200 CV y 2 directos hicieron 50 CV y 100 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[27.5,25,30], correct:27.5, explain:"Personal: 20. Directos: 2.5+5=7.5. Total=27.5."},
-
-    {id:"b18", q:"No hiciste orden personal. Tienes 3 directos con 150 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[22.5,15,30], correct:22.5, explain:"Cada directo: 150×0.05=7.5. Total: 7.5×3=22.5."},
-
-    {id:"b19", q:"Tu orden personal fue de 120 CV y 1 directo hizo 120 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[18,12,24], correct:18, explain:"Personal: 12. Directo: 6. Total=18."},
-
-    {id:"b20", q:"Tu orden personal fue de 90 CV y 4 directos hicieron 40, 40, 40 y 40 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[17,15,19], correct:17, explain:"Personal: 9. Directos: 4×2=8. Total=17."},
-
-    {id:"b21", q:"Tu orden personal fue de 250 CV y 1 directo hizo 50 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[27.5,30,25], correct:27.5, explain:"Personal: 25. Directo: 2.5. Total=27.5."},
-
-    {id:"b22", q:"Tu orden personal fue de 40 CV y 1 directo hizo 225 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[15.25,13,18], correct:15.25, explain:"Personal: 4. Directo: 11.25. Total=15.25."},
-
-    {id:"b23", q:"No hiciste orden personal. Tienes 2 directos con 300 CV y 100 CV. ¿Cuál es el total de LRP acumulado?",
-      options:[20,18,25], correct:20, explain:"Directos: 300×0.05=15 y 100×0.05=5. Total=20."},
-
-    {id:"b24", q:"Tu orden personal fue de 300 CV y 3 directos hicieron 50 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[37.5,35,40], correct:37.5, explain:"Personal: 30. Directos: 3×2.5=7.5. Total=37.5."},
-
-    {id:"b25", q:"Tu orden personal fue de 80 CV y 4 directos hicieron 70 CV cada uno. ¿Cuál es el total de LRP acumulado?",
-      options:[22,26,24], correct:22, explain:"Personal: 8. Directos: 4×3.5=14. Total=22."},
-  ];
-
-  let currentA = [];
-  let currentB = [];
-
-  function renderQuestion(container, q, number, unitText){
-    const card = document.createElement("div");
-    card.className = "q";
-    card.innerHTML = `
-      <div class="q-title">P${number}. ${q.q}</div>
-      <div class="q-desc">Selecciona la respuesta correcta.</div>
-      <div class="opts">
-        ${q.options.map(opt => `
-          <label class="opt">
-            <input type="radio" name="${q.id}" value="${opt}">
-            ${fmt(opt)} ${unitText}
-          </label>
-        `).join("")}
-      </div>
-      <div class="fb" id="fb-${q.id}"></div>
-    `;
-    container.appendChild(card);
+  // Genera 2 distractores “creíbles”
+  function make3Options(correct){
+    const c = Number(correct);
+    // distractores: uno con % equivocado y otro con suma equivocada
+    const w1 = c * 2;             // típico error (doblar)
+    const w2 = Math.max(0, c - (c*0.25)); // típico error (restar)
+    let opts = shuffle([c, w1, w2]).map(v => ({
+      label: money(v),
+      value: String(to2(v)),
+      isCorrect: Math.abs(v - c) < 0.001
+    }));
+    // asegura que la correcta esté y haya 3 únicas
+    // (si por casualidad coinciden, ajusta)
+    const uniq = new Set(opts.map(o=>o.value));
+    if(uniq.size < 3){
+      const w3 = c + (c*0.10);
+      opts = shuffle([c, w1, w3]).map(v => ({
+        label: money(v),
+        value: String(to2(v)),
+        isCorrect: Math.abs(v - c) < 0.001
+      }));
+    }
+    return shuffle(opts);
   }
 
+  let current = [];
+
   function render(){
-    const secA = document.getElementById("secA");
-    const secB = document.getElementById("secB");
-    secA.innerHTML = "";
-    secB.innerHTML = "";
-    document.getElementById("score").textContent = "";
+    const host = document.getElementById("quiz");
+    host.innerHTML = "";
+    document.getElementById("score").textContent = "—";
 
-    currentA = pickN(BANK_A, 5);
-    currentB = pickN(BANK_B, 5);
+    current = pickN(BANK, 10).map(q => {
+      const correctValue = String(to2(q.correct));
+      const options = make3Options(q.correct).map(o => ({...o}));
+      return {...q, options, correctValue};
+    });
 
-    currentA.forEach((q, i) => renderQuestion(secA, q, i+1, "LRP"));
-    currentB.forEach((q, i) => renderQuestion(secB, q, i+6, "LRP"));
+    current.forEach((q, i) => {
+      const card = document.createElement("div");
+      card.className = "q";
+      card.innerHTML = `
+        <div class="q-title">P${i+1}. ${q.text}</div>
+        <div class="q-desc">Selecciona la respuesta correcta.</div>
+        <div class="opts">
+          ${q.options.map(opt => `
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${opt.value}">
+              ${opt.label}
+            </label>
+          `).join("")}
+        </div>
+        <div class="fb" id="fb-${q.id}"></div>
+      `;
+      host.appendChild(card);
+    });
   }
 
   function check(){
-    let ok = 0;
-    let total = 0;
+    let ok = 0, total = 0;
 
-    function checkOne(q){
+    current.forEach(q => {
       total++;
       const picked = document.querySelector(`input[name="${q.id}"]:checked`);
       const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
@@ -276,34 +267,33 @@
 
       inputs.forEach(inp => {
         const lab = inp.closest(".opt");
-        const isCorrect = String(inp.value) === String(q.correct);
+        const isCorrect = String(inp.value) === String(q.correctValue);
         if(isCorrect) lab.classList.add("correct");
         if(inp.checked && !isCorrect) lab.classList.add("wrong");
       });
 
-      const isOk = String(picked.value) === String(q.correct);
+      const isOk = String(picked.value) === String(q.correctValue);
       if(isOk){
         ok++;
         fb.className = "fb ok";
         fb.textContent = "Correcto ✅";
       } else {
         fb.className = "fb bad";
-        fb.textContent = `Incorrecto ❌  ${q.explain}`;
+        fb.textContent = `Incorrecto ❌  Correcto: ${money(Number(q.correctValue))}`;
       }
-    }
+    });
 
-    [...currentA, ...currentB].forEach(checkOne);
-    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+    document.getElementById("score").textContent = `${ok}/${total}`;
   }
 
   function reset(){
-    [...currentA, ...currentB].forEach(q=>{
+    current.forEach(q=>{
       document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
       document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
       const fb = document.getElementById(`fb-${q.id}`);
       if(fb){ fb.className="fb"; fb.textContent=""; }
     });
-    document.getElementById("score").textContent = "";
+    document.getElementById("score").textContent = "—";
   }
 
   document.getElementById("btnNew").addEventListener("click", render);
