@@ -28,6 +28,17 @@
     .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
     .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
     .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .mini{
+      display:inline-block;
+      font-weight:900;
+      font-size:12px;
+      padding:2px 10px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid #ffd3b7;
+      margin-top:8px;
+      color:#222;
+    }
     .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
     .opt input{margin-right:10px;transform:translateY(1px)}
     .opt.correct{border-color:var(--ok);background:#e9f7ee}
@@ -41,152 +52,236 @@
       border:1px solid var(--line);
       border-radius:18px;
       padding:14px;
-      margin:18px 0 26px;
+      margin:18px 0 14px;
+    }
+    .controls-row{
       display:flex;
+      justify-content:flex-end;
+      align-items:center;
       gap:10px;
       flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
     }
-    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
-    .btn-primary{background:var(--hc-orange);color:#fff}
-    .btn-primary:hover{background:var(--hc-orange-dark)}
-    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
-    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0;line-height:1}
+    .btn-review{
+      background:var(--hc-orange);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:16px;
+      font-size:16px;
+      box-shadow:0 10px 18px rgba(222,115,25,.25);
+    }
+    .btn-review:hover{background:var(--hc-orange-dark)}
+    .btn-white{
+      background:#fff;
+      color:var(--hc-orange-dark);
+      border:1px solid var(--hc-orange-dark);
+      padding:12px 14px;
+      border-radius:16px;
+      font-size:14px;
+    }
+    .btn-white:hover{
+      background:#fff7f1;
+      border-color:var(--hc-orange);
+      color:var(--hc-orange);
+    }
+
+    .score-wrap{
+      background:linear-gradient(90deg, #fff3ea, #ffffff);
+      border:1px solid #ffd3b7;
+      border-radius:18px;
+      padding:14px;
+      margin:12px 0 26px;
+      text-align:center;
+    }
+    .score-title{
+      font-weight:900;
+      color:var(--hc-orange-dark);
+      margin:0 0 6px;
+      font-size:16px;
+    }
+    .score{
+      font-weight:1000;
+      font-size:28px;
+      letter-spacing:.3px;
+      margin:0;
+    }
     .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+
+    .floating-back{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:9999;
+      background:#000;
+      color:#fff;
+      text-decoration:none;
+      font-weight:900;
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow:0 10px 20px rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.15);
+    }
+    .floating-back:hover{opacity:.92}
   </style>
 </head>
 <body>
+  <a class="floating-back" href="https://emiliorxzz-huyaz.wordpress.com/5-plan-de-compensacion/">Volver a HCW Zone</a>
+
   <div class="wrap">
     <div class="top">
       <h1>Quiz Bono de Igualación</h1>
-      <p class="sub">Ahora te toca a ti. 🔥 Calcula la igualación completa según los niveles que desbloquea tu rango.</p>
+      <p class="sub">Cada intento genera <b>10 preguntas</b>. Calcula la <b>igualación total</b> con base en tu rango.</p>
       <p class="rule">
-        Regla: tu igualación se calcula sobre <code>(Binario + Uninivel)</code> de cada nivel que tengas desbloqueado.<br>
-        Porcentajes: <code>N1 25%</code>, <code>N2 20%</code>, <code>N3 10%</code>, <code>N4 5%</code>, <code>N5 5%</code><br>
-        <span class="pill">Ej: Plata cobra N1+N2+N3 (no solo N3).</span>
+        Porcentajes por nivel:<br>
+        • Nivel 1: <code>25%</code> • Nivel 2: <code>20%</code> • Nivel 3: <code>10%</code> • Nivel 4: <code>5%</code> • Nivel 5: <code>5%</code><br>
+        Desbloqueo por rango: Ejecutivo (N1), Bronce (N1+N2), Plata (N1+N2+N3), Oro (+N4), Platino (+N5).<br>
+        <span class="pill">Tip: igualación total = suma de cada nivel desbloqueado.</span>
       </p>
     </div>
 
     <div id="quiz"></div>
 
     <div class="controls">
-      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
-      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
-      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
-      <div class="score" id="score"></div>
+      <div class="controls-row">
+        <button class="btn-review" id="btnCheck" type="button">Revisar</button>
+        <button class="btn-white" id="btnNew" type="button">Nueva versión</button>
+        <button class="btn-white" id="btnReset" type="button">Limpiar</button>
+      </div>
     </div>
 
-    <div class="foot">HC Wellness Zone • Quiz — Bono de Igualación</div>
+    <div class="score-wrap">
+      <p class="score-title">Resultado</p>
+      <p class="score" id="score">—</p>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz Igualación</div>
   </div>
 
 <script>
-  const fmtUsd = (n) => Number(n).toFixed(2).replace(/\.00$/,'');
   const shuffle = (arr) => {
     const a = arr.slice();
     for (let i=a.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
+      const j = Math.floor(Math.random()*(i+1));
       [a[i],a[j]]=[a[j],a[i]];
     }
     return a;
   };
   const pickN = (arr,n) => shuffle(arr).slice(0,n);
 
-  const LEVEL_RATE = {1:0.25, 2:0.20, 3:0.10, 4:0.05, 5:0.05};
-  const RANK_MAX_LEVEL = {"Ejecutivo":1,"Bronce":2,"Plata":3,"Oro":4,"Platino":5};
+  const to2 = (n) => (Math.round(n*100)/100).toFixed(2).replace(/\.00$/,'');
+  const usd = (n) => `${to2(n)} USD`;
 
-  function calcTotal(rank, levels){
+  const LEVEL_RATE = {1:0.25, 2:0.20, 3:0.10, 4:0.05, 5:0.05};
+  const RANK_MAX_LEVEL = {
+    "Ejecutivo": 1,
+    "Bronce": 2,
+    "Plata": 3,
+    "Oro": 4,
+    "Platino": 5
+  };
+
+  function calcTotal(rank, lv){
     const maxL = RANK_MAX_LEVEL[rank] || 0;
     let total = 0;
-    let explainParts = [];
     for(let l=1;l<=5;l++){
-      const base = (levels[l]?.bin || 0) + (levels[l]?.uni || 0);
-      if(l<=maxL){
-        const pay = base * (LEVEL_RATE[l] || 0);
-        total += pay;
-        explainParts.push(`N${l}: base $${fmtUsd(base)} × ${(LEVEL_RATE[l]*100).toFixed(0)}% = $${fmtUsd(pay)}`);
-      } else {
-        if(base>0) explainParts.push(`N${l}: base $${fmtUsd(base)} (no aplica por rango)`);
+      const base = (lv[l]?.bin || 0) + (lv[l]?.uni || 0);
+      if(l <= maxL){
+        total += base * (LEVEL_RATE[l] || 0);
       }
     }
-    return {total, explain: explainParts.join(" | ")};
+    return total;
   }
 
-  const optText = (usd) => `Igualación total: $${fmtUsd(usd)} USD`;
-
-  function buildOptions(correct){
-    const w1 = correct * 2;               // error típico (duplicar)
-    const w2 = Math.max(0, correct - 10); // error típico
-    const w3 = correct + 7.5;             // error típico
-    return shuffle([correct, w1, w2, w3]).map(v => optText(v));
+  function explain(rank, lv){
+    const maxL = RANK_MAX_LEVEL[rank] || 0;
+    let parts = [];
+    for(let l=1;l<=5;l++){
+      const bin = lv[l]?.bin || 0;
+      const uni = lv[l]?.uni || 0;
+      const base = bin + uni;
+      if(l <= maxL){
+        parts.push(`N${l}: (${bin}+${uni})×${Math.round(LEVEL_RATE[l]*100)}%`);
+      } else if(base>0){
+        parts.push(`N${l}: (${bin}+${uni}) no aplica`);
+      }
+    }
+    return parts.join(" | ");
   }
 
-  // 25 escenarios: cada uno trae comisiones (bin+uni) por nivel 1..5
-  // En el quiz se pide el TOTAL de igualación según el rango (sumando niveles desbloqueados).
+  // Banco de 20 escenarios (rotan 10 por intento).
+  // Cada escenario: rank + comisiones por nivel (bin+uni).
   const BANK = [
-    {id:"q1",  rank:"Ejecutivo", levels:{1:{bin:200,uni:50},2:{bin:120,uni:30}}},
-    {id:"q2",  rank:"Bronce",    levels:{1:{bin:200,uni:50},2:{bin:120,uni:30}}},
-    {id:"q3",  rank:"Plata",     levels:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
-    {id:"q4",  rank:"Oro",       levels:{1:{bin:250,uni:0},2:{bin:180,uni:20},3:{bin:300,uni:30},4:{bin:600,uni:75}}},
-    {id:"q5",  rank:"Platino",   levels:{1:{bin:500,uni:0},2:{bin:250,uni:100},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:1000,uni:120}}},
-    {id:"q6",  rank:"Plata",     levels:{1:{bin:90,uni:10},2:{bin:150,uni:75},3:{bin:0,uni:120}}},
-    {id:"q7",  rank:"Bronce",    levels:{1:{bin:100,uni:25},2:{bin:60,uni:56.25},3:{bin:400,uni:40}}},
-    {id:"q8",  rank:"Ejecutivo", levels:{1:{bin:67.5,uni:11.25},3:{bin:225,uni:225}}},
-    {id:"q9",  rank:"Oro",       levels:{1:{bin:300,uni:50},2:{bin:120,uni:30},4:{bin:250,uni:0}}},
-    {id:"q10", rank:"Platino",   levels:{2:{bin:500,uni:0},5:{bin:0,uni:225}}},
-    {id:"q11", rank:"Plata",     levels:{1:{bin:300,uni:0},2:{bin:150,uni:0},3:{bin:225,uni:225},4:{bin:500,uni:50}}},
-    {id:"q12", rank:"Bronce",    levels:{1:{bin:200,uni:0},2:{bin:0,uni:200},4:{bin:600,uni:60}}},
-    {id:"q13", rank:"Ejecutivo", levels:{1:{bin:1000,uni:100},2:{bin:500,uni:0}}},
-    {id:"q14", rank:"Oro",       levels:{1:{bin:120,uni:30},2:{bin:300,uni:40},3:{bin:250,uni:100},4:{bin:700,uni:60},5:{bin:900,uni:100}}},
-    {id:"q15", rank:"Platino",   levels:{1:{bin:0,uni:300},2:{bin:120,uni:30},3:{bin:300,uni:40},4:{bin:250,uni:0},5:{bin:1000,uni:0}}},
-    {id:"q16", rank:"Plata",     levels:{1:{bin:500,uni:50},2:{bin:0,uni:0},3:{bin:340,uni:0}}},
-    {id:"q17", rank:"Bronce",    levels:{1:{bin:250,uni:50},2:{bin:150,uni:30}}},
-    {id:"q18", rank:"Ejecutivo", levels:{1:{bin:0,uni:120}}},
-    {id:"q19", rank:"Oro",       levels:{1:{bin:150,uni:0},2:{bin:120,uni:30},3:{bin:0,uni:120},4:{bin:600,uni:0}}},
-    {id:"q20", rank:"Platino",   levels:{1:{bin:300,uni:30},2:{bin:180,uni:20},3:{bin:300,uni:40},4:{bin:600,uni:75},5:{bin:1000,uni:120}}},
-    {id:"q21", rank:"Plata",     levels:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
-    {id:"q22", rank:"Bronce",    levels:{1:{bin:90,uni:10},2:{bin:300,uni:0}}},
-    {id:"q23", rank:"Ejecutivo", levels:{1:{bin:300,uni:30},5:{bin:1000,uni:120}}},
-    {id:"q24", rank:"Oro",       levels:{1:{bin:67.5,uni:11.25},2:{bin:60,uni:56.25},3:{bin:150,uni:75},4:{bin:250,uni:0}}},
-    {id:"q25", rank:"Platino",   levels:{1:{bin:100,uni:25},2:{bin:150,uni:75},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:0,uni:225}}},
+    {id:"i1",  rank:"Ejecutivo", lv:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
+    {id:"i2",  rank:"Bronce",    lv:{1:{bin:250,uni:0},2:{bin:150,uni:30},3:{bin:200,uni:20}}},
+    {id:"i3",  rank:"Plata",     lv:{1:{bin:200,uni:50},2:{bin:120,uni:30},3:{bin:300,uni:40}}},
+    {id:"i4",  rank:"Oro",       lv:{1:{bin:300,uni:50},2:{bin:180,uni:20},3:{bin:300,uni:30},4:{bin:600,uni:75}}},
+    {id:"i5",  rank:"Platino",   lv:{1:{bin:500,uni:0},2:{bin:250,uni:100},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:1000,uni:120}}},
+    {id:"i6",  rank:"Plata",     lv:{1:{bin:90,uni:10},2:{bin:150,uni:75},3:{bin:0,uni:120},4:{bin:500,uni:50}}},
+    {id:"i7",  rank:"Bronce",    lv:{1:{bin:100,uni:25},2:{bin:60,uni:56.25},3:{bin:400,uni:40}}},
+    {id:"i8",  rank:"Ejecutivo", lv:{1:{bin:67.5,uni:11.25},2:{bin:60,uni:56.25}}},
+    {id:"i9",  rank:"Oro",       lv:{1:{bin:150,uni:0},2:{bin:120,uni:30},3:{bin:0,uni:120},4:{bin:600,uni:0},5:{bin:900,uni:100}}},
+    {id:"i10", rank:"Platino",   lv:{1:{bin:300,uni:30},2:{bin:180,uni:20},3:{bin:300,uni:40},4:{bin:600,uni:75},5:{bin:1000,uni:120}}},
+    {id:"i11", rank:"Ejecutivo", lv:{1:{bin:1000,uni:100},2:{bin:500,uni:0}}},
+    {id:"i12", rank:"Bronce",    lv:{1:{bin:200,uni:0},2:{bin:0,uni:200},4:{bin:600,uni:60}}},
+    {id:"i13", rank:"Plata",     lv:{1:{bin:500,uni:50},2:{bin:0,uni:0},3:{bin:340,uni:0}}},
+    {id:"i14", rank:"Oro",       lv:{1:{bin:120,uni:30},2:{bin:300,uni:40},3:{bin:250,uni:100},4:{bin:700,uni:60}}},
+    {id:"i15", rank:"Platino",   lv:{1:{bin:0,uni:300},2:{bin:120,uni:30},3:{bin:300,uni:40},4:{bin:250,uni:0},5:{bin:1000,uni:0}}},
+    {id:"i16", rank:"Plata",     lv:{1:{bin:300,uni:0},2:{bin:150,uni:0},3:{bin:225,uni:225}}},
+    {id:"i17", rank:"Bronce",    lv:{1:{bin:250,uni:50},2:{bin:150,uni:30}}},
+    {id:"i18", rank:"Ejecutivo", lv:{1:{bin:0,uni:120},3:{bin:300,uni:40}}},
+    {id:"i19", rank:"Oro",       lv:{1:{bin:67.5,uni:11.25},2:{bin:60,uni:56.25},3:{bin:150,uni:75},4:{bin:250,uni:0}}},
+    {id:"i20", rank:"Platino",   lv:{1:{bin:100,uni:25},2:{bin:150,uni:75},3:{bin:300,uni:40},4:{bin:900,uni:100},5:{bin:0,uni:225}}},
   ];
+
+  function make3Options(correct){
+    const c = Number(correct);
+    const w1 = c * 0.8;  // error: olvidan un nivel / % incorrecto
+    const w2 = c * 1.2;  // error: cuentan niveles no desbloqueados
+    let opts = [c, w1, w2].map(v => Number(to2(v)));
+    if(new Set(opts).size < 3){
+      opts = [c, c*0.9, c*1.1].map(v => Number(to2(v)));
+    }
+    return shuffle(opts).map(v => ({
+      label: usd(v),
+      value: String(to2(v)),
+      isCorrect: Math.abs(v - Number(to2(c))) < 0.001
+    }));
+  }
 
   let current = [];
 
   function render(){
     const host = document.getElementById("quiz");
     host.innerHTML = "";
-    document.getElementById("score").textContent = "";
+    document.getElementById("score").textContent = "—";
 
-    current = pickN(BANK, 10).map(x => ({...x}));
+    current = pickN(BANK, 10).map(item => {
+      const correct = calcTotal(item.rank, item.lv);
+      const correctValue = String(to2(correct));
+      const options = make3Options(correct);
+      return {...item, correct, correctValue, options};
+    });
 
     current.forEach((q, i) => {
-      const {total, explain} = calcTotal(q.rank, q.levels);
-      q._correctText = optText(total);
-      q._explain = explain;
-
-      const options = buildOptions(total);
-
       const lines = [1,2,3,4,5].map(l=>{
-        const b = q.levels[l]?.bin ?? 0;
-        const u = q.levels[l]?.uni ?? 0;
-        return `• Nivel ${l}: Binario $${fmtUsd(b)} + Uninivel $${fmtUsd(u)}`;
+        const bin = q.lv[l]?.bin || 0;
+        const uni = q.lv[l]?.uni || 0;
+        return `• Nivel ${l}: Binario ${usd(bin)} + Uninivel ${usd(uni)}`;
       }).join("<br>");
 
       const card = document.createElement("div");
       card.className = "q";
       card.innerHTML = `
-        <div class="q-title">P${i+1}. Cálculo de Igualación (total por niveles desbloqueados)</div>
+        <div class="q-title">P${i+1}. Tu rango es <b>${q.rank}</b>. Con la información de comisiones por niveles, ¿cuál es tu <b>igualación total</b> en USD?</div>
         <div class="q-desc">
-          Tu rango: <b>${q.rank}</b> (desbloquea hasta nivel ${RANK_MAX_LEVEL[q.rank]})<br>
-          Comisiones de tu organización por niveles:<br>${lines}<br>
-          Pregunta: ¿Cuál es tu <b>igualación total</b> en USD esta semana?
+          ${lines}<br>
+          <span class="mini">Recuerda: tu rango define hasta qué nivel cobras.</span>
         </div>
         <div class="opts">
-          ${options.map(o=>`
+          ${q.options.map(opt => `
             <label class="opt">
-              <input type="radio" name="${q.id}" value="${o}">
-              ${o}
+              <input type="radio" name="${q.id}" value="${opt.value}">
+              ${opt.label}
             </label>
           `).join("")}
         </div>
@@ -197,10 +292,9 @@
   }
 
   function check(){
-    let ok = 0;
-    let total = 0;
+    let ok = 0, total = 0;
 
-    current.forEach(q=>{
+    current.forEach(q => {
       total++;
       const picked = document.querySelector(`input[name="${q.id}"]:checked`);
       const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
@@ -216,23 +310,23 @@
 
       inputs.forEach(inp => {
         const lab = inp.closest(".opt");
-        const isCorrect = (inp.value === q._correctText);
+        const isCorrect = String(inp.value) === String(q.correctValue);
         if(isCorrect) lab.classList.add("correct");
         if(inp.checked && !isCorrect) lab.classList.add("wrong");
       });
 
-      const isOk = (picked.value === q._correctText);
+      const isOk = String(picked.value) === String(q.correctValue);
       if(isOk){
         ok++;
         fb.className = "fb ok";
         fb.textContent = "Correcto ✅";
       } else {
         fb.className = "fb bad";
-        fb.textContent = `Incorrecto ❌  ${q._explain}`;
+        fb.textContent = `Incorrecto ❌  ${explain(q.rank, q.lv)}. Total correcto: ${usd(Number(q.correctValue))}`;
       }
     });
 
-    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+    document.getElementById("score").textContent = `${ok}/${total}`;
   }
 
   function reset(){
@@ -242,7 +336,7 @@
       const fb = document.getElementById(`fb-${q.id}`);
       if(fb){ fb.className="fb"; fb.textContent=""; }
     });
-    document.getElementById("score").textContent = "";
+    document.getElementById("score").textContent = "—";
   }
 
   document.getElementById("btnNew").addEventListener("click", render);
