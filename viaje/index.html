@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Bono de Viaje — HC Wellness</title>
+  <style>
+    :root{
+      --hc-orange:#de7319;
+      --hc-orange-dark:#a3441f;
+      --ok:#0a7a2f;
+      --bad:#b00020;
+      --ink:#111;
+      --muted:#666;
+      --card:#fff;
+      --bg:#f6f5f2;
+      --line:#e6e6e6;
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:980px;margin:22px auto;padding:0 14px;}
+    .top{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.04);}
+    h1{margin:0 0 6px;font-size:22px;text-align:center;color:var(--hc-orange-dark)}
+    .sub{margin:0 0 12px;color:var(--muted);line-height:1.35;text-align:center}
+    .rule{margin:0;padding:12px 14px;border-radius:14px;background:#fff3ea;border:1px solid #ffd3b7;font-weight:800;line-height:1.35}
+    code{background:#fff;padding:1px 6px;border-radius:8px;border:1px solid #eee}
+    .pill{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid #ffd3b7;background:#fff;font-size:12px;color:#222;font-weight:900;margin-top:8px}
+
+    .section-title{margin:18px 0 6px;font-size:16px;font-weight:900;color:#222}
+    .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
+    .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
+    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.35}
+    .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
+    .opt input{margin-right:10px;transform:translateY(1px)}
+    .opt.correct{border-color:var(--ok);background:#e9f7ee}
+    .opt.wrong{border-color:var(--bad);background:#fdecee}
+    .fb{margin-top:8px;font-weight:900}
+    .fb.ok{color:var(--ok)}
+    .fb.bad{color:var(--bad)}
+
+    .controls{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+      margin:18px 0 26px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    button{cursor:pointer;border-radius:14px;padding:10px 14px;font-weight:900;border:0}
+    .btn-primary{background:var(--hc-orange);color:#fff}
+    .btn-primary:hover{background:var(--hc-orange-dark)}
+    .btn-outline{background:#fff;color:var(--hc-orange-dark);border:1px solid var(--hc-orange-dark)}
+    .score{width:100%;text-align:center;font-weight:900;margin-top:6px}
+    .foot{color:var(--muted);font-size:12.5px;margin:10px 0 26px;text-align:center}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Quiz Bono de Viaje</h1>
+      <p class="sub">Cada intento genera <b>10 preguntas</b>: 5 por <b>rango</b> y 5 por <b>puntos</b>.</p>
+      <p class="rule">
+        <b>Por rango:</b> Plata+ mínimo <code>8 de 22 semanas</code>. Beneficios: Oro+ acompañante + <code>$500</code>; Platino+ <code>4 noches</code>; Diamante+ <code>5 noches</code>.<br>
+        <b>Regla del rango oficial:</b> si tus 8 semanas no fueron el mismo rango, tu rango del viaje es <b>el más bajo</b> dentro de esas 8 semanas.<br>
+        <b>Por puntos:</b> P2 = <code>7 pts N1</code>, <code>5 pts N2</code>. P1 = <code>3 pts N1</code>, <code>2 pts N2</code>. Metas: <code>100/125/150</code>.<br>
+        <div class="pill">Puedes calificar por ambas vías (rango y puntos).</div>
+      </p>
+    </div>
+
+    <div class="section-title">Sección A — Calificación por rango (5 preguntas)</div>
+    <div id="secA"></div>
+
+    <div class="section-title">Sección B — Calificación por puntos (5 preguntas)</div>
+    <div id="secB"></div>
+
+    <div class="controls">
+      <button class="btn-primary" id="btnNew" type="button">Nueva versión (10 preguntas)</button>
+      <button class="btn-outline" id="btnCheck" type="button">Revisar</button>
+      <button class="btn-outline" id="btnReset" type="button">Limpiar</button>
+      <div class="score" id="score"></div>
+    </div>
+
+    <div class="foot">HC Wellness Zone • Quiz — Bono de Viaje</div>
+  </div>
+
+<script>
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  };
+  const pickN = (arr,n) => shuffle(arr).slice(0,n);
+
+  // ======== RANGO ========
+  const BANK_RANGO = [
+    {
+      id:"r1",
+      q:"Un socio logró Plata o superior durante 8 de las 22 semanas del periodo. ¿Califica al viaje por rango?",
+      options:["Sí, califica por rango","No, no califica","Solo si es Oro"],
+      correct:"Sí, califica por rango",
+      exp:"Plata+ mínimo 8 semanas."
+    },
+    {
+      id:"r2",
+      q:"Un socio logró Plata o superior durante 7 de las 22 semanas. ¿Califica al viaje por rango?",
+      options:["Sí, califica","No, no califica","Sí, pero sin beneficios"],
+      correct:"No, no califica",
+      exp:"Se requieren 8 semanas."
+    },
+    {
+      id:"r3",
+      q:"Si calificas por rango y tu rango oficial del viaje queda en Oro o superior, ¿qué beneficio extra recibes?",
+      options:["Acompañante + $500 USD","4 noches totales","5 noches totales"],
+      correct:"Acompañante + $500 USD",
+      exp:"Oro+ incluye acompañante y $500."
+    },
+    {
+      id:"r4",
+      q:"Si calificas por rango y tu rango oficial del viaje queda en Platino o superior, ¿cuántas noches totales te corresponden?",
+      options:["4 noches totales","5 noches totales","3 noches totales"],
+      correct:"4 noches totales",
+      exp:"Platino+ = 4 noches totales."
+    },
+    {
+      id:"r5",
+      q:"Si calificas por rango y tu rango oficial del viaje queda en Diamante o superior, ¿cuántas noches totales te corresponden?",
+      options:["5 noches totales","4 noches totales","3 noches totales"],
+      correct:"5 noches totales",
+      exp:"Diamante+ = 5 noches totales."
+    },
+
+    // Clave: rango oficial = el más bajo de las 8 semanas
+    {
+      id:"r6",
+      q:"Calificaste 8 semanas así: 7 semanas como Diamante y 1 semana como Plata. ¿Con qué rango se considera tu viaje (rango oficial)?",
+      options:["Plata","Diamante","Oro"],
+      correct:"Plata",
+      exp:"El rango oficial se toma como el más bajo dentro de tus 8 semanas."
+    },
+    {
+      id:"r7",
+      q:"Calificaste 8 semanas así: 5 semanas Oro y 3 semanas Platino. ¿Con qué rango se considera tu viaje (rango oficial)?",
+      options:["Oro","Platino","Plata"],
+      correct:"Oro",
+      exp:"Se toma el más bajo dentro de las 8 semanas."
+    },
+    {
+      id:"r8",
+      q:"Calificaste 8 semanas así: 8 semanas Diamante. ¿Con qué rango se considera tu viaje (rango oficial)?",
+      options:["Diamante","Platino","Oro"],
+      correct:"Diamante",
+      exp:"Todas las semanas fueron el mismo rango."
+    },
+    {
+      id:"r9",
+      q:"Si calificas por puntos y también calificas por rango, ¿qué ocurre?",
+      options:["Puedes calificar por ambas vías; no tienes que elegir solo una","Solo cuenta una vía y se anula la otra","No se permite combinar"],
+      correct:"Puedes calificar por ambas vías; no tienes que elegir solo una",
+      exp:"Rango y puntos NO se excluyen."
+    }
+  ];
+
+  // ======== PUNTOS ========
+  const pts = (n1p2, n2p2, n1p1, n2p1) => (n1p2*7 + n2p2*5 + n1p1*3 + n2p1*2);
+
+  const BANK_PUNTOS = [
+    {
+      id:"p1",
+      q:"Ya hiciste compra personal. Semana: Nivel 1 (Paquete 2: 6 socios), Nivel 2 (Paquete 2: 4 socios). ¿Cuántos puntos acumulas?",
+      options:["62 pts","52 pts","74 pts"],
+      correct:"62 pts",
+      exp:"6×7=42 y 4×5=20 → 62."
+    },
+    {
+      id:"p2",
+      q:"Ya hiciste compra personal. Semana: Nivel 1 (Paquete 1: 10 socios), Nivel 2 (Paquete 1: 5 socios). ¿Cuántos puntos acumulas?",
+      options:["40 pts","35 pts","45 pts"],
+      correct:"40 pts",
+      exp:"10×3=30 y 5×2=10 → 40."
+    },
+    {
+      id:"p3",
+      q:"NO hiciste compra personal (ni antes ni esta semana). Tu nivel 1 y 2 hicieron compras de paquetes. ¿Cuántos puntos acumulas?",
+      options:["0 pts","Depende del paquete","Los mismos puntos normales"],
+      correct:"0 pts",
+      exp:"Sin compra personal, no acumulas puntos."
+    },
+    {
+      id:"p4",
+      q:"Ya hiciste compra personal. Llevas 98 puntos y esta semana sumas 6. ¿Qué meta alcanzas?",
+      options:["Viaje sencillo (100 pts)","Viaje doble (125 pts)","No alcanza meta"],
+      correct:"Viaje sencillo (100 pts)",
+      exp:"98+6=104 → ≥100."
+    },
+    {
+      id:"p5",
+      q:"Ya hiciste compra personal. Llevas 120 puntos y esta semana sumas 7. ¿Qué meta alcanzas?",
+      options:["Viaje doble (125 pts)","Viaje sencillo (100 pts)","Viaje familiar (150 pts)"],
+      correct:"Viaje doble (125 pts)",
+      exp:"120+7=127 → ≥125."
+    },
+    {
+      id:"p6",
+      q:"Ya hiciste compra personal. Llevas 147 puntos y esta semana sumas 3. ¿Qué meta alcanzas?",
+      options:["Viaje familiar (150 pts)","Viaje doble (125 pts)","Viaje sencillo (100 pts)"],
+      correct:"Viaje familiar (150 pts)",
+      exp:"147+3=150 → ≥150."
+    },
+    {
+      id:"p7",
+      q:"Ya hiciste compra personal. Semana: Nivel 1 (Paquete 2: 5 socios) + Nivel 2 (Paquete 1: 6 socios). ¿Cuántos puntos acumulas?",
+      options:["47 pts","41 pts","52 pts"],
+      correct:"47 pts",
+      exp:"5×7=35 y 6×2=12 → 47."
+    },
+    {
+      id:"p8",
+      q:"Un socio de tu nivel 1 compró paquete esta semana, pero tú NO habías comprado en semanas anteriores ni en la misma semana. ¿Qué pasa con esos puntos?",
+      options:["No puedes acumularlos","Sí los acumulas normal","Se van al banco"],
+      correct:"No puedes acumularlos",
+      exp:"Si tú no compras antes o esa semana, no cuentan."
+    },
+    {
+      id:"p9",
+      q:"Ya hiciste compra personal. Semana: Nivel 1 (Paquete 2: 3 socios) y Nivel 2 (Paquete 2: 2 socios) y Nivel 1 (Paquete 1: 4 socios). ¿Cuántos puntos acumulas?",
+      options:["(3×7)+(2×5)+(4×3)=43 pts","39 pts","48 pts"],
+      correct:"(3×7)+(2×5)+(4×3)=43 pts",
+      exp:"21+10+12=43."
+    }
+  ];
+
+  let currentA = [];
+  let currentB = [];
+
+  function render(){
+    const secA = document.getElementById("secA");
+    const secB = document.getElementById("secB");
+    secA.innerHTML = "";
+    secB.innerHTML = "";
+    document.getElementById("score").textContent = "";
+
+    currentA = pickN(BANK_RANGO, 5);
+    currentB = pickN(BANK_PUNTOS, 5);
+
+    currentA.forEach((q, i) => secA.appendChild(renderQ(q, i+1)));
+    currentB.forEach((q, i) => secB.appendChild(renderQ(q, i+6)));
+  }
+
+  function renderQ(q, num){
+    const card = document.createElement("div");
+    card.className = "q";
+    card.innerHTML = `
+      <div class="q-title">P${num}. ${q.q}</div>
+      <div class="q-desc">Selecciona la respuesta correcta.</div>
+      <div class="opts">
+        ${q.options.map(opt => `
+          <label class="opt">
+            <input type="radio" name="${q.id}" value="${opt}">
+            ${opt}
+          </label>
+        `).join("")}
+      </div>
+      <div class="fb" id="fb-${q.id}"></div>
+    `;
+    return card;
+  }
+
+  function check(){
+    let ok = 0;
+    let total = 0;
+
+    [...currentA, ...currentB].forEach(q => {
+      total++;
+      const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+      const inputs = document.querySelectorAll(`input[name="${q.id}"]`);
+      const fb = document.getElementById(`fb-${q.id}`);
+
+      inputs.forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+
+      if(!picked){
+        fb.className = "fb bad";
+        fb.textContent = "Elige una opción.";
+        return;
+      }
+
+      inputs.forEach(inp => {
+        const lab = inp.closest(".opt");
+        const isCorrect = (inp.value === q.correct);
+        if(isCorrect) lab.classList.add("correct");
+        if(inp.checked && !isCorrect) lab.classList.add("wrong");
+      });
+
+      const isOk = (picked.value === q.correct);
+      if(isOk){
+        ok++;
+        fb.className = "fb ok";
+        fb.textContent = "Correcto ✅";
+      } else {
+        fb.className = "fb bad";
+        fb.textContent = `Incorrecto ❌  ${q.exp}`;
+      }
+    });
+
+    document.getElementById("score").textContent = `Resultado: ${ok}/${total}`;
+  }
+
+  function reset(){
+    [...currentA, ...currentB].forEach(q=>{
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.checked=false);
+      document.querySelectorAll(`input[name="${q.id}"]`).forEach(inp => inp.closest(".opt").classList.remove("correct","wrong"));
+      const fb = document.getElementById(`fb-${q.id}`);
+      if(fb){ fb.className="fb"; fb.textContent=""; }
+    });
+    document.getElementById("score").textContent = "";
+  }
+
+  document.getElementById("btnNew").addEventListener("click", render);
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnReset").addEventListener("click", reset);
+
+  render();
+</script>
+</body>
+</html>
