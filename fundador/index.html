@@ -27,7 +27,14 @@
 
     .q{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--hc-orange);border-radius:18px;padding:14px;margin:12px 0}
     .q-title{font-weight:900;margin:0 0 10px;line-height:1.25}
-    .q-desc{margin:0 0 10px;color:var(--muted);line-height:1.45;white-space:pre-line}
+    .q-desc{
+      margin:0 0 10px;
+      color:#222;
+      line-height:1.45;
+      white-space:pre-line; /* respeta saltos */
+      font-weight:800;      /* negritas */
+    }
+
     .opt{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin:8px 0;background:#fff}
     .opt input{margin-right:10px;transform:translateY(1px)}
     .opt.correct{border-color:var(--ok);background:#e9f7ee}
@@ -199,7 +206,6 @@
     return {options: opts, correctValue: String(to2(c))};
   }
 
-  // Escenarios
   const BANK = [
     {id:"s1",  weeks:9,  eligible:true,  your:9,  total:80,  sales:4000000},
     {id:"s2",  weeks:12, eligible:true,  your:12, total:100, sales:8000000},
@@ -211,8 +217,6 @@
     {id:"s8",  weeks:22, eligible:true,  your:22, total:180, sales:11000000},
     {id:"s9",  weeks:10, eligible:true,  your:10, total:125, sales:7500000},
     {id:"s10", weeks:11, eligible:true,  your:11, total:110, sales:9000000},
-
-    // no aplica
     {id:"n1",  weeks:7,  eligible:false, your:7,  total:70,  sales:5300000},
     {id:"n2",  weeks:0,  eligible:true,  your:0,  total:100, sales:8000000},
     {id:"n3",  weeks:12, eligible:false, your:12, total:100, sales:8000000},
@@ -227,15 +231,15 @@
     host.innerHTML = "";
     document.getElementById("score").textContent = "—";
 
-    current = pickN(BANK, 10).map(item => {
+    current = pickN(BANK, 10).map((item, idx) => {
       const {pay, fund, share, applies} = calcPay(item.sales, item.eligible, item.your, item.total);
       const {options, correctValue} = make3Options(pay, applies);
 
-      const questionLines =
-`Calificaste como Platino o superior en el año ${item.weeks} veces de 52 semanas.
-Fundadores elegibles calificaron en general: ${item.total} periodos
-Ventas globales de HCW en el año: $${fmtInt(item.sales)} USD
-¿Cuál es el resultado correcto para este escenario?`;
+      const qText =
+`P${idx+1}. Calificaste como Platino o superior en el año ${item.weeks} veces de 52 semanas.
+    Fundadores elegibles calificaron en general: ${item.total} periodos
+    Ventas globales de HCW en el año: $${fmtInt(item.sales)} USD
+    ¿Cuál es el resultado correcto para este escenario?`;
 
       const explain =
         `Fondo = 1% de $${fmtInt(item.sales)} = ${usd(fund)}. ` +
@@ -244,21 +248,14 @@ Ventas globales de HCW en el año: $${fmtInt(item.sales)} USD
           : `No aplica → pago $0.`
         );
 
-      return {
-        id: item.id,
-        qdesc: questionLines,
-        explain,
-        options,
-        correctValue
-      };
+      return { id:item.id, qText, explain, options, correctValue };
     });
 
-    current.forEach((q, i) => {
+    current.forEach((q) => {
       const card = document.createElement("div");
       card.className = "q";
       card.innerHTML = `
-        <div class="q-title">P${i+1}.</div>
-        <div class="q-desc">${q.qdesc}</div>
+        <div class="q-desc">${q.qText}</div>
         <div class="opts">
           ${q.options.map(opt => `
             <label class="opt">
